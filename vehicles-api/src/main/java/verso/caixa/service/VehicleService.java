@@ -68,6 +68,14 @@ public class VehicleService {
         return Response.ok(responseDTO).build();
     }
 
+    public VehicleModel getVehicleEntityById(UUID vehicleId) {
+        VehicleModel vehicle = vehicleDAO.findById(vehicleId);
+        if (vehicle == null)
+            throw new VehicleNotFoundException("Veículo não encontrado!", ErrorCode.VEHICLE_NOT_FOUND);
+        return vehicle;
+    }
+
+
     public void deleteById(UUID vehicleId){
         VehicleModel vehicleToDelete = vehicleDAO.findById(vehicleId);
 
@@ -77,8 +85,7 @@ public class VehicleService {
         if (vehicleToDelete.isRented())
             throw new VehicleDeletionException("Veículo não pode ser deletado pois está alugado!", ErrorCode.VEHICLE_RENTED_DELETE_DENIED);
 
-
-        vehicleToDelete.delete();
+        vehicleDAO.deleteById(vehicleId);
     }
 
     public Response getVehicleList(int page, int size) {

@@ -1,5 +1,6 @@
 package verso.caixa.exception;
 
+import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 
 @Getter
@@ -12,5 +13,10 @@ public class BusinessException extends RuntimeException {
         this.title = title;
         this.errorCode = errorCode;
     }
+
+    public Response.Status getHttpStatus() {
+        return Response.Status.BAD_REQUEST; // default
+    }
+
 }
 

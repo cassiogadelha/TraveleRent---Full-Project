@@ -29,12 +29,6 @@ public class MaintenanceModel extends PanacheEntityBase {
     @JoinColumn(name = "vehicle_id", nullable = false)
     private VehicleModel vehicleModel;
 
-    public MaintenanceModel(String problemDescription, VehicleModel vehicleModel) {
-        this.createdAt = Instant.now();
-        this.problemDescription = problemDescription;
-        this.vehicleModel = vehicleModel;
-    }
-
     public void setVehicle(VehicleModel vehicle) {
         this.vehicleModel = vehicle;
     }

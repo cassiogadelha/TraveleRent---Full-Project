@@ -24,8 +24,7 @@ public class VehicleModel extends PanacheEntityBase{
     }
 
     /*==================================== RELATIONSHIPS ===========================================*/
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "vehicle_id") //classe forte recebe o Join
+    @OneToMany(mappedBy = "vehicleModel", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<MaintenanceModel> maintenances = new ArrayList<>();
 
     @ManyToMany(cascade = CascadeType.PERSIST)
@@ -63,9 +62,6 @@ public class VehicleModel extends PanacheEntityBase{
     protected VehicleModel() {}
 
     public VehicleModel(String brand, String model, int year, String engine) {
-        if (model == null || model.isBlank()) {
-            throw new IllegalArgumentException("model must not be null");
-        }
         this.brand = brand;
         this.model = model;
         this.year = year;
@@ -92,6 +88,7 @@ public class VehicleModel extends PanacheEntityBase{
 
     public void moveForMaintenance(MaintenanceModel maintenanceModel) {
         this.setStatus(VehicleStatusEnum.UNDER_MAINTENANCE);
+        maintenanceModel.setVehicle(this);
         this.maintenances.add(maintenanceModel);
     }
 

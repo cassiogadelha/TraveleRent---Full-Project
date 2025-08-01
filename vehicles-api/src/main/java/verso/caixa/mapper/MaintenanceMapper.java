@@ -2,6 +2,8 @@ package verso.caixa.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import verso.caixa.dto.CreateMaintenanceRequestDTO;
+import verso.caixa.dto.CreateVehicleRequestDTO;
 import verso.caixa.dto.MaintenanceResponseDTO;
 import verso.caixa.dto.VehicleInfoDTO;
 import verso.caixa.model.MaintenanceModel;
@@ -11,6 +13,9 @@ import verso.caixa.model.VehicleModel;
 public interface MaintenanceMapper {
     @Mapping(target = "vehicleInfo", expression = "java(toVehicleInfo(model.getVehicleModel()))")
     MaintenanceResponseDTO toResponse(MaintenanceModel model);
+
+    @Mapping(target = "createdAt", expression = "java(java.time.Instant.now())")
+    MaintenanceModel toEntity(CreateMaintenanceRequestDTO dto);
 
     default VehicleInfoDTO toVehicleInfo(VehicleModel vehicle) {
         return new VehicleInfoDTO(

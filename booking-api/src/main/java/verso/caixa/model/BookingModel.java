@@ -2,10 +2,7 @@ package verso.caixa.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import verso.caixa.enums.BookingStatusEnum;
 import verso.caixa.enums.ErrorCode;
 import verso.caixa.exception.IllegalBookingStatus;
@@ -44,6 +41,14 @@ public class BookingModel extends PanacheEntityBase {
     private BookingStatusEnum status = BookingStatusEnum.CREATED;
 
     public BookingModel(UUID vehicleId, String customerName, LocalDate startDate, LocalDate endDate) {
+        this.vehicleId = vehicleId;
+        this.customerName = customerName;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    public BookingModel(UUID id, LocalDate startDate, LocalDate endDate, String customerName, UUID vehicleId) {
+        this.bookingId = id;
         this.vehicleId = vehicleId;
         this.customerName = customerName;
         this.startDate = startDate;

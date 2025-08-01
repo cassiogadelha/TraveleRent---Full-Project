@@ -16,4 +16,5 @@ public interface VehicleAPIClient {
     Vehicle findVehicleById(@PathParam("vehicleId") @NotNull UUID id);
 
     record Vehicle(String status) {}
+
 }

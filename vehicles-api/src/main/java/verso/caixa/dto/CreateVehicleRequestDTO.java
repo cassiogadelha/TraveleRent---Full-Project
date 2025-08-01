@@ -23,7 +23,7 @@ public record CreateVehicleRequestDTO(
     @NotBlank(message = "brand não pode ser vazio")
     String brand,
 
-    List<CreateAcessoryRequestDTO> accessories,
+    List<AddAccessoryRequestDTO> accessories,
     List<CreateMaintenanceRequestDTO> maintenances
 ) {
 }

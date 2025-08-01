@@ -2,7 +2,7 @@ package verso.caixa.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record CreateAcessoryRequestDTO(
+public record AddAccessoryRequestDTO(
     @NotBlank
     String name
 ) {
