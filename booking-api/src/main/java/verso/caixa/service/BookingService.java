@@ -7,7 +7,6 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.jboss.resteasy.reactive.RestResponse;
 import org.jetbrains.annotations.NotNull;
 import verso.caixa.client.VehicleAPIClient;
 import verso.caixa.dto.CreateBookingRequestDTO;
@@ -30,7 +29,7 @@ public class BookingService {
 
     BookingMapper bookingMapper;
     BookingDAO bookingDAO;
-    private VehicleAPIClient vehicleAPIClient;
+    private final VehicleAPIClient vehicleAPIClient;
 
     public BookingService(BookingMapper bookingMapper, BookingDAO bookingDAO, @RestClient VehicleAPIClient vehicleAPIClient){
 
@@ -90,7 +89,7 @@ public class BookingService {
         return Response.ok(dto).build();
     }
 
-    public Response updateVehicle(UUID bookingId, UpdateBookingStatusRequest dto) {
+    public Response updateBooking(UUID bookingId, UpdateBookingStatusRequest dto) {
         BookingModel bookingModel = bookingDAO.findById(bookingId);
 
         if (bookingModel == null) return Response.status(404).build();

@@ -42,11 +42,11 @@ public class RemoteServiceException extends RuntimeException {
 
 
   public Optional<String> getDetails() {
-    return Optional.ofNullable(details);
+    return Optional.ofNullable(details); //Optional pra evitar NullPointerException
   }
 
   public Optional<String> getPath() {
-    return Optional.ofNullable(path);
+    return Optional.ofNullable(path); //Optional pra evitar NullPointerException
   }
 
   public String getSummary() {

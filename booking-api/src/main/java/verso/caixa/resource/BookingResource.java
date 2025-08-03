@@ -7,6 +7,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
+import verso.caixa.exception.RemoteServiceException;
 import verso.caixa.service.BookingService;
 
 import java.util.UUID;
@@ -43,7 +44,22 @@ public class BookingResource {
     @PATCH
     @Path("{id}")
     @Transactional
-    public Response updateVehiclePartially(@PathParam("id") UUID vehicleId, UpdateBookingStatusRequest dto){
-        return bookingService.updateVehicle(vehicleId, dto);
+    public Response updateBookingPartially(@PathParam("id") UUID vehicleId, UpdateBookingStatusRequest dto){
+        return bookingService.updateBooking(vehicleId, dto);
     }
+
+    @GET
+    @Path("/teste-exception")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String throwsException() {
+        throw new RemoteServiceException(
+                "Erro de simulação",
+                "ERRO_TESTE",
+                "Esse é um erro gerado intencionalmente para testar o mapper",
+                "/api/teste-exception",
+                null,
+                418   //"I'm a teapot"
+        );
+    }
+
 }

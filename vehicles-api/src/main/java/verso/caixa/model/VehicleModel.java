@@ -57,6 +57,7 @@ public class VehicleModel extends PanacheEntityBase{
 
     @Enumerated(EnumType.STRING)
     private VehicleStatusEnum status = VehicleStatusEnum.AVAILABLE;
+
     private String model;
 
     protected VehicleModel() {}
