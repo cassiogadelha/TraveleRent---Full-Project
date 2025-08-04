@@ -6,9 +6,6 @@ import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import verso.caixa.dto.ErrorResponseDTO;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Provider
 public class RemoteServiceExceptionMapper implements ExceptionMapper<RemoteServiceException> {
 

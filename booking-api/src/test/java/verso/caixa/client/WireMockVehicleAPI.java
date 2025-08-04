@@ -16,7 +16,7 @@ public class WireMockVehicleAPI implements QuarkusTestResourceLifecycleManager {
         wireMockServer = new WireMockServer(8080); // porta que seu client usa
         wireMockServer.start();
 
-        // Stub do veículo
+        // Stub padrão
         wireMockServer.stubFor(get(urlPathMatching("/api/v1/vehicles/([a-zA-Z0-9\\-]+)"))
                 .willReturn(okJson("{ \"status\": \"AVAILABLE\" }")));
 

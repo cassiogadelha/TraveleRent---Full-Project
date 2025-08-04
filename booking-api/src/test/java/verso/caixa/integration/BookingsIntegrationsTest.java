@@ -10,12 +10,10 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockVehicleAPI.class)
-
 public class BookingsIntegrationsTest {
 
     @Test
@@ -24,7 +22,7 @@ public class BookingsIntegrationsTest {
         LocalDate inicio = LocalDate.now().plusDays(1);
         LocalDate fim = LocalDate.now().plusDays(5);
 
-        String payload = """
+        String fakeBooking = """
                 {
                     "vehicleId": "%s",
                     "customerName": "Cássio",
@@ -36,7 +34,7 @@ public class BookingsIntegrationsTest {
         // Act & Assert
         given()
             .contentType(ContentType.JSON)
-            .body(payload)
+            .body(fakeBooking)
             .when()
             .post("/api/v1/bookings")
             .then()

@@ -2,18 +2,20 @@ package verso.caixa.resource;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import verso.caixa.client.VehicleAPIClient;
+import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.exception.RemoteServiceException;
+import verso.caixa.helpers.BookingTestHelper;
+
+import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
-
-import java.util.UUID;
 
 
 @QuarkusTest
@@ -39,16 +41,19 @@ public class IntegrationVehicleAPITest {
                 )
         );
 
+        CreateBookingRequestDTO fakebooking = BookingTestHelper.buildValidBookingDTO();
+
         // Chama a API e valida a resposta JSON gerada pelo ExceptionMapper
         given()
-                .pathParam("id", id)
+                .contentType(ContentType.JSON)
+                .body(fakebooking)
                 .when()
-                .get("/consulta/{id}")
+                .post("/api/v1/bookings")
                 .then()
                 .statusCode(404)
-                .body("message", is("Veículo não encontrado"))
-                .body("errorCode", is("VEICULO_NAO_ENCONTRADO"))
-                .body("httpStatus", is(404));
+                .body("title", is("Problema ao procurar o veículo!"))
+                .body("details", is("O veículo não existe!"))
+                .body("errorCode", is("VEHICLE-001"));
     }
 
 }
