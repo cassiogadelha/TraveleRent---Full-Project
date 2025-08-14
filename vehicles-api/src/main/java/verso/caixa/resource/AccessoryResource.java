@@ -1,5 +1,6 @@
 package verso.caixa.resource;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,6 +23,7 @@ public class AccessoryResource {
 
     @PUT
     @Transactional
+    @RolesAllowed({"realm-admin"})
     @Path("/{id}/accessories")
     public Response addAccessory(@PathParam("id") UUID id, AddAccessoryRequestDTO dto) {
 

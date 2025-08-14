@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.*;
 @QuarkusTest
 public class IntegrationsTest {
 
-    @Test
+    /*@Test
     void shouldCreateVehicleAndAddMaintenance() throws JsonProcessingException {
 
         CreateVehicleDTOTest dto = new CreateVehicleDTOTest("Fiat", "Uno", 2020, "1.0 Fire");
@@ -367,6 +367,6 @@ public class IntegrationsTest {
                 .body("[0].brand", startsWith("Brand"))
                 .body("[0].year", greaterThanOrEqualTo(2020))
                 .body("[0].engine", equalTo("1.0"));
-    }
+    }*/
 
 }

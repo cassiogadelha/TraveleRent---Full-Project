@@ -1,5 +1,6 @@
 package verso.caixa.resource;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,6 +23,7 @@ public class MaintenanceResource {
     @POST
     @Path("/{vehicleId}/maintenances")
     @Transactional
+    @RolesAllowed({"realm-admin"})
     public Response addMaintenance(@PathParam("vehicleId") UUID vehicleId, CreateMaintenanceRequestDTO request) {
 
         return maintenanceService.addMaintenance(vehicleId, request);
@@ -29,6 +31,7 @@ public class MaintenanceResource {
 
     @GET
     @Path("/{vehicleId}/maintenances/{maintenanceId}")
+    @RolesAllowed({"realm-admin"})
     public Response getMaintenanceById(@PathParam("vehicleId") UUID vehicleId, @PathParam("maintenanceId") UUID maintenanceId) {
 
         return maintenanceService.findById(vehicleId, maintenanceId);

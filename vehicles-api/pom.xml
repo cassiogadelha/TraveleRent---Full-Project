@@ -99,28 +99,9 @@
         </dependency>
 
 
-
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-jwt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-jwt-build</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.37.3</version>
-        </dependency> <!-- Cria tokens em endpoints
-                           Assina tokens com sua chave privada
-                           Inclue claims personalizados como groups, email, exp, etc. -->
-
-        <dependency>
-            <groupId>at.favre.lib</groupId>
-            <artifactId>bcrypt</artifactId>
-            <version>0.9.0</version>
+            <artifactId>quarkus-oidc</artifactId>
         </dependency>
 
 
