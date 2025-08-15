@@ -31,6 +31,7 @@ public class VehicleResource {
     @Transactional
     @RolesAllowed({"realm-admin"})
     public Response createVehicle(@Valid CreateVehicleRequestDTO dto, @Context SecurityContext ctx){
+        System.out.println(ctx.getUserPrincipal().getName());
         return vehicleService.createVehicle(dto);
     }
 
