@@ -82,9 +82,6 @@ public class VehicleService {
         if(vehicleToDelete == null)
             throw new VehicleDeletionException("Veículo não encontrado!", ErrorCode.VEHICLE_NOT_FOUND);
 
-        if (vehicleToDelete.isRented())
-            throw new VehicleDeletionException("Veículo não pode ser deletado pois está alugado!", ErrorCode.VEHICLE_RENTED_DELETE_DENIED);
-
         vehicleDAO.deleteById(vehicleId);
     }
 

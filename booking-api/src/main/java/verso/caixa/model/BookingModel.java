@@ -33,24 +33,24 @@ public class BookingModel extends PanacheEntityBase {
 
     public UUID vehicleId;
 
-    private String customerName;
+    private UUID customerId;
     private LocalDate startDate;
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
     private BookingStatusEnum status = BookingStatusEnum.CREATED;
 
-    public BookingModel(UUID vehicleId, String customerName, LocalDate startDate, LocalDate endDate) {
+    public BookingModel(UUID vehicleId, UUID customerId, LocalDate startDate, LocalDate endDate) {
         this.vehicleId = vehicleId;
-        this.customerName = customerName;
+        this.customerId = customerId;
         this.startDate = startDate;
         this.endDate = endDate;
     }
 
-    public BookingModel(UUID id, LocalDate startDate, LocalDate endDate, String customerName, UUID vehicleId) {
+    public BookingModel(UUID id, LocalDate startDate, LocalDate endDate, UUID customerId, UUID vehicleId) {
         this.bookingId = id;
         this.vehicleId = vehicleId;
-        this.customerName = customerName;
+        this.customerId = customerId;
         this.startDate = startDate;
         this.endDate = endDate;
     }

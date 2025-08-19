@@ -18,8 +18,8 @@ public class VehicleModel extends PanacheEntityBase{
     };
 
     static {
-        VEHICLE_STATE_MACHINE.put(VehicleStatusEnum.AVAILABLE, Set.of(VehicleStatusEnum.RENTED, VehicleStatusEnum.UNDER_MAINTENANCE));
-        VEHICLE_STATE_MACHINE.put(VehicleStatusEnum.RENTED, Set.of(VehicleStatusEnum.AVAILABLE, VehicleStatusEnum.UNDER_MAINTENANCE));
+        VEHICLE_STATE_MACHINE.put(VehicleStatusEnum.AVAILABLE, Set.of(VehicleStatusEnum.UNDER_MAINTENANCE));
+        //VEHICLE_STATE_MACHINE.put(VehicleStatusEnum.RENTED, Set.of(VehicleStatusEnum.AVAILABLE, VehicleStatusEnum.UNDER_MAINTENANCE));
         VEHICLE_STATE_MACHINE.put(VehicleStatusEnum.UNDER_MAINTENANCE, Set.of(VehicleStatusEnum.AVAILABLE));
     }
 
@@ -67,10 +67,6 @@ public class VehicleModel extends PanacheEntityBase{
         this.model = model;
         this.year = year;
         this.engine = engine;
-    }
-
-    public boolean isRented() {
-        return this.getStatus().equals(VehicleStatusEnum.RENTED);
     }
 
     public void setStatus(VehicleStatusEnum incomingStatus) {

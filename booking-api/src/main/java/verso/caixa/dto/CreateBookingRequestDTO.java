@@ -13,9 +13,6 @@ public record CreateBookingRequestDTO(
         @NotNull(message = "Veículo não informado!")
         UUID vehicleId,
 
-        @NotNull(message = "Informe o nome do cliente.")
-        String customerName,
-
         @NotNull(message = "Informe a data de início do  aluguel.")
         @FutureOrPresent(message = "A data de início não pode ser anterior a hoje.")
         LocalDate startDate,

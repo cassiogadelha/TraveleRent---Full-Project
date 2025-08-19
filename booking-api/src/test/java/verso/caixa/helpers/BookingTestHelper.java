@@ -15,7 +15,7 @@ public class BookingTestHelper {
                 UUID.randomUUID(),
                 LocalDate.now().plusDays(1),
                 LocalDate.now().plusDays(3),
-                "Sara Campos",
+                UUID.randomUUID(),
                 UUID.randomUUID()
         );
     }
@@ -29,8 +29,8 @@ public class BookingTestHelper {
         );
     }
 
-    public static BookingModel buildCustomBooking(UUID vehicleId, String name, LocalDate start, LocalDate end) {
-        return new BookingModel(UUID.randomUUID(), start, end, name, vehicleId);
+    public static BookingModel buildCustomBooking(UUID vehicleId, UUID customerId, LocalDate start, LocalDate end) {
+        return new BookingModel(UUID.randomUUID(), start, end, customerId, vehicleId);
     }
 
     public static CreateBookingRequestDTO buildCustomBookingDTO(String name, LocalDate start, LocalDate end) {

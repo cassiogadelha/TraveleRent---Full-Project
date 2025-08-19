@@ -1,6 +1,7 @@
 package verso.caixa.security.keycloak.authorization;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
@@ -9,16 +10,18 @@ import java.util.Map;
 @ApplicationScoped
 public class KeycloakAdminService {
 
+    @Inject
     @RestClient
     KeycloakTokenClient tokenClient;
 
+    @Inject
     @RestClient
     KeycloakUserClient userClient;
 
     public String getAdminToken() {
         Map<String, String> tokenResponse = tokenClient.getToken(
                 "client_credentials",
-                "backend-service",
+                "vehicles-backend-service",
                 "0CSfjWlFuusccCAd4oSV3AiduukffS6t"
         );
         return tokenResponse.get("access_token");

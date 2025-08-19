@@ -1,8 +1,11 @@
 package verso.caixa.service;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
@@ -29,10 +32,14 @@ public class BookingService {
 
     BookingMapper bookingMapper;
     BookingDAO bookingDAO;
+    SecurityIdentity securityIdentity;
+
+    @RestClient
     private final VehicleAPIClient vehicleAPIClient;
 
-    public BookingService(BookingMapper bookingMapper, BookingDAO bookingDAO, @RestClient VehicleAPIClient vehicleAPIClient){
 
+    public BookingService(BookingMapper bookingMapper, BookingDAO bookingDAO, @RestClient VehicleAPIClient vehicleAPIClient, SecurityIdentity securityIdentity) {
+        this.securityIdentity = securityIdentity;
         this.bookingMapper = bookingMapper;
         this.bookingDAO = bookingDAO;
         this.vehicleAPIClient = vehicleAPIClient;
@@ -44,17 +51,23 @@ public class BookingService {
         if (dto.endDate().isBefore(dto.startDate()))
             throw new IllegalEndDateException("A data de término não pode ser anterior a de início", ErrorCode.INVALID_END_DATE);
 
+        System.out.println("IDENTITY: " + securityIdentity);
+
         VehicleAPIClient.Vehicle vehicle = vehicleAPIClient.findVehicleById(dto.vehicleId());
 
         if (vehicle == null) {
             throw new VehicleException("O veículo não existe!", ErrorCode.NULL_VEHICLE);
         }
 
-        if (!vehicle.status().equals("AVAILABLE")) {
+        Log.info("ALREADY RENTED: " + bookingDAO.isVehicleAlreadyRented(dto.vehicleId()));
+        if (!vehicle.status().equals("AVAILABLE") || bookingDAO.isVehicleAlreadyRented(dto.vehicleId())) {
             throw new VehicleException("O veículo não está disponível para aluguel.", ErrorCode.UNAVAILABLE_VEHICLE);
         }
 
         BookingModel newBooking = bookingMapper.toEntity(dto);
+
+        String customerId = securityIdentity.getPrincipal().getName();
+        newBooking.setCustomerId(UUID.fromString(customerId));
 
         bookingDAO.persist(newBooking);
 

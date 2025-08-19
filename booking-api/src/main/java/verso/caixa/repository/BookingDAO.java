@@ -10,6 +10,7 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class BookingDAO implements PanacheRepositoryBase<BookingModel, UUID> {
+
     public boolean existConflict(UUID incomingVehicleId, LocalDate incomingStartDate, LocalDate incomingEndDate) {
         return count(
                 "vehicleId = :vehicleId AND startDate <= :endDate AND endDate >= :startDate",
@@ -18,6 +19,14 @@ public class BookingDAO implements PanacheRepositoryBase<BookingModel, UUID> {
                         .and("endDate", incomingEndDate)) > 0;
 
     }
+
+    /*
+        SELECT COUNT(*)
+        FROM {BD}
+        WHERE vehicle_id = :vehicleId
+          AND start_date <= :incomingEndDate
+          AND end_date >= :incomingStartDate;
+     */
 
     /*
     É uma forma abreviada que o Quarkus oferece via Panache, que permite escrever queries posicionais diretamente
@@ -31,10 +40,22 @@ public class BookingDAO implements PanacheRepositoryBase<BookingModel, UUID> {
     é uma condição de filtro que compara a data de início da reserva existente com a data de término da nova reserva
     que você está tentando inserir.
     WHERE start_date <= '2025-08-15'
-
-
-
-
-
     */
+
+    public boolean isVehicleAlreadyRented(UUID vehicleId) {
+        String jpql = """
+        SELECT 1
+        FROM tb-booking b
+        WHERE b.vehicleId = :vehicleId
+          AND (b.status = 'CREATED' OR b.status = 'ACTIVE')
+    """;
+
+        return getEntityManager()
+                .createQuery(jpql)
+                .setParameter("vehicleId", vehicleId)
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst()
+                .isEmpty();
+    }
 }
