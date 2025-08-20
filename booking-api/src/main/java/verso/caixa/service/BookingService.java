@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -51,22 +52,30 @@ public class BookingService {
         if (dto.endDate().isBefore(dto.startDate()))
             throw new IllegalEndDateException("A data de término não pode ser anterior a de início", ErrorCode.INVALID_END_DATE);
 
-        System.out.println("IDENTITY: " + securityIdentity);
-
         VehicleAPIClient.Vehicle vehicle = vehicleAPIClient.findVehicleById(dto.vehicleId());
 
         if (vehicle == null) {
             throw new VehicleException("O veículo não existe!", ErrorCode.NULL_VEHICLE);
         }
 
-        Log.info("ALREADY RENTED: " + bookingDAO.isVehicleAlreadyRented(dto.vehicleId()));
-        if (!vehicle.status().equals("AVAILABLE") || bookingDAO.isVehicleAlreadyRented(dto.vehicleId())) {
-            throw new VehicleException("O veículo não está disponível para aluguel.", ErrorCode.UNAVAILABLE_VEHICLE);
+        Log.info("VEHICLE STATUS: " + vehicle.status());
+        if (vehicle.status().equals("UNDER_MAINTENANCE")) {
+            throw new VehicleException("O veículo está em manutenção, portanto, indisponível para aluguel!.", ErrorCode.UNAVAILABLE_VEHICLE);
         }
+
+        //Log.info("ALREADY RENTED: " + bookingDAO.isVehicleAlreadyRented(dto.vehicleId()));
+        //if (bookingDAO.isVehicleAlreadyRented(dto.vehicleId())) {
+            //throw new VehicleException("O veículo já está alugado!.", ErrorCode.UNAVAILABLE_VEHICLE);
+       // }
 
         BookingModel newBooking = bookingMapper.toEntity(dto);
 
-        String customerId = securityIdentity.getPrincipal().getName();
+        DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) securityIdentity.getPrincipal();
+        String customerId = principal.getSubject();
+        Log.info("CUSTOMER ID (sub): " + customerId);
+        String customerName = principal.getName();
+        
+        newBooking.setCustomerName(customerName);
         newBooking.setCustomerId(UUID.fromString(customerId));
 
         bookingDAO.persist(newBooking);

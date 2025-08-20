@@ -34,6 +34,8 @@ public class BookingModel extends PanacheEntityBase {
     public UUID vehicleId;
 
     private UUID customerId;
+    private String customerName;
+
     private LocalDate startDate;
     private LocalDate endDate;
 

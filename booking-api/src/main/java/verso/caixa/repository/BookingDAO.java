@@ -45,7 +45,7 @@ public class BookingDAO implements PanacheRepositoryBase<BookingModel, UUID> {
     public boolean isVehicleAlreadyRented(UUID vehicleId) {
         String jpql = """
         SELECT 1
-        FROM tb-booking b
+        FROM BookingModel b
         WHERE b.vehicleId = :vehicleId
           AND (b.status = 'CREATED' OR b.status = 'ACTIVE')
     """;
@@ -56,6 +56,6 @@ public class BookingDAO implements PanacheRepositoryBase<BookingModel, UUID> {
                 .setMaxResults(1)
                 .getResultStream()
                 .findFirst()
-                .isEmpty();
+                .isPresent();
     }
 }

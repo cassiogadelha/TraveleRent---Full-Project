@@ -11,6 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import java.util.UUID;
 
 @RegisterRestClient(configKey = "vehicle-api")
+@RegisterProvider(AuthHeaderFilter.class)//chama o filtro para inserir o token
 @ApplicationScoped //para os testes
 public interface VehicleAPIClient {
 
