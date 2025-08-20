@@ -1,5 +1,9 @@
 package verso.caixa.resource;
 
+import io.quarkus.logging.Log;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -17,26 +21,35 @@ import java.util.UUID;
 @Consumes(MediaType.APPLICATION_JSON)
 public class BookingResource {
     private final BookingService bookingService;
+    private final SecurityIdentity securityIdentity;
 
-    public BookingResource(BookingService bookingService) {
+    public BookingResource(BookingService bookingService, SecurityIdentity securityIdentity) {
         this.bookingService = bookingService;
+        this.securityIdentity = securityIdentity;
     }
 
     @POST
     @Transactional
     public Response createBooking(@Valid CreateBookingRequestDTO dto){
-        return bookingService.createBooking(dto);
+
+        DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) securityIdentity.getPrincipal();
+        UUID customerId = UUID.fromString(principal.getSubject());
+        String customerName = principal.getName();
+
+        return bookingService.createBooking(dto, customerId, customerName);
     }
 
     @GET
+    @RolesAllowed("realm-admin")
     public Response findAllBookings(@QueryParam("page") @DefaultValue("0") int page,
                                     @QueryParam("size") @DefaultValue("10") int size){
 
-        return bookingService.getBookingList(page, size);
+        return bookingService.getAllBookings(null, page, size, true);
     }
 
     @GET
     @Path("{id}")
+    @RolesAllowed("realm-admin")
     public Response findById(@PathParam("id") UUID vehicleId){
         return Response.ok(bookingService.findById(vehicleId)).build();
     }
@@ -49,8 +62,18 @@ public class BookingResource {
     }
 
     @GET
+    @Path("my")
+    public Response getMyBookings(@QueryParam("page") @DefaultValue("0") int page,
+                                  @QueryParam("size") @DefaultValue("10") int size) {
+
+        DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) securityIdentity.getPrincipal();
+        UUID customerId = UUID.fromString(principal.getSubject());
+
+        return bookingService.getAllBookings(customerId, page, size, false);
+    }
+
+    @GET
     @Path("/teste-exception")
-    @Produces(MediaType.APPLICATION_JSON)
     public String throwsException() {
         throw new RemoteServiceException(
                 "Erro de simulação",

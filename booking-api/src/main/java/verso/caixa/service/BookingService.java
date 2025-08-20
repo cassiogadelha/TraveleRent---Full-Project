@@ -24,6 +24,7 @@ import verso.caixa.model.BookingModel;
 import verso.caixa.repository.BookingDAO;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -47,7 +48,7 @@ public class BookingService {
     }
 
     @Transactional
-    public Response createBooking(@NotNull CreateBookingRequestDTO dto) {
+    public Response createBooking(@NotNull CreateBookingRequestDTO dto, UUID customerId, String customerName) {
 
         if (dto.endDate().isBefore(dto.startDate()))
             throw new IllegalEndDateException("A data de término não pode ser anterior a de início", ErrorCode.INVALID_END_DATE);
@@ -69,14 +70,8 @@ public class BookingService {
        // }
 
         BookingModel newBooking = bookingMapper.toEntity(dto);
-
-        DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) securityIdentity.getPrincipal();
-        String customerId = principal.getSubject();
-        Log.info("CUSTOMER ID (sub): " + customerId);
-        String customerName = principal.getName();
-        
         newBooking.setCustomerName(customerName);
-        newBooking.setCustomerId(UUID.fromString(customerId));
+        newBooking.setCustomerId(customerId);
 
         bookingDAO.persist(newBooking);
 
@@ -87,16 +82,27 @@ public class BookingService {
                 .build();
     }
 
-    public Response getBookingList(int page, int size) {
-        PanacheQuery<BookingModel> bookings = bookingDAO.findAll();
-        bookings.page(Page.of(page, size));
+    public Response getAllBookings(UUID customerId, int page, int size, boolean isAdmin) {
+        List<BookingModel> bookings;
 
-        if (bookings.list().isEmpty()) {
-            Map<String, String> response = Map.of("mensagem", "A lista de agendamentos está vazia."); //cria um map imutavel para ser convertido facilmente em Json
-            return Response.ok(response).build();
+        if (isAdmin) {
+            bookings = bookingDAO.findAll()
+                    .page(Page.of(page, size))
+                    .list();
         } else {
-            return Response.ok(bookingMapper.toResponseDTOList(bookings.list())).build();
+            bookings = bookingDAO.findByCustomerId(customerId, page, size);
         }
+
+        if (bookings.isEmpty()) {
+            String message = isAdmin
+                    ? "A lista de agendamentos está vazia."
+                    : "Você não possui nenhum agendamento ainda.";
+
+            Map<String, String> response = Map.of("mensagem", message);
+            return Response.ok(response).build();
+        }
+
+        return Response.ok(bookingMapper.toResponseDTOList(bookings)).build();
     }
 
     public Response findById(UUID bookingId) {

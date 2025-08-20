@@ -1,11 +1,14 @@
 package verso.caixa.repository;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
 import verso.caixa.model.BookingModel;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -42,20 +45,9 @@ public class BookingDAO implements PanacheRepositoryBase<BookingModel, UUID> {
     WHERE start_date <= '2025-08-15'
     */
 
-    public boolean isVehicleAlreadyRented(UUID vehicleId) {
-        String jpql = """
-        SELECT 1
-        FROM BookingModel b
-        WHERE b.vehicleId = :vehicleId
-          AND (b.status = 'CREATED' OR b.status = 'ACTIVE')
-    """;
-
-        return getEntityManager()
-                .createQuery(jpql)
-                .setParameter("vehicleId", vehicleId)
-                .setMaxResults(1)
-                .getResultStream()
-                .findFirst()
-                .isPresent();
+    public List<BookingModel> findByCustomerId(UUID customerId, int page, int size) {
+        return find("customerId = ?1 order by startDate desc", customerId)
+                .page(Page.of(page, size))
+                .list();
     }
 }
