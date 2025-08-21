@@ -1,5 +1,7 @@
 package verso.caixa.service;
 
+import io.quarkus.cache.CacheInvalidate;
+import io.quarkus.cache.CacheResult;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
@@ -47,6 +49,7 @@ public class BookingService {
     }
 
     @Transactional
+    @CacheInvalidate(cacheName = "all-bookings")
     public Response createBooking(@NotNull CreateBookingRequestDTO dto, UUID customerId, String customerName) {
 
         if (dto.endDate().isBefore(dto.startDate()))
@@ -76,6 +79,7 @@ public class BookingService {
                 .build();
     }
 
+    @CacheResult(cacheName = "all-bookings")
     public Response getAllBookings(UUID customerId, int page, int size, boolean isAdmin) {
         List<BookingModel> bookings;
 
@@ -111,7 +115,8 @@ public class BookingService {
         return Response.ok(dto).build();
     }
 
-    public Response updateBooking(UUID bookingId, UpdateBookingStatusRequest dto) {
+    @CacheInvalidate(cacheName = "all-bookings")
+    public Response checkingBooking(UUID bookingId, UpdateBookingStatusRequest dto) {
         BookingModel bookingModel = bookingDAO.findById(bookingId);
 
         if (bookingModel == null) throw new BookingNotFoundException("Erro ao editar agendamento.", ErrorCode.NULL_BOOKING);

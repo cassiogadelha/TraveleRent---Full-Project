@@ -59,7 +59,7 @@ public class BookingResource {
     @Transactional
     @RolesAllowed("realm-employee")
     public Response checkingBooking(@PathParam("id") UUID vehicleId, UpdateBookingStatusRequest dto){
-        return bookingService.updateBooking(vehicleId, dto);
+        return bookingService.checkingBooking(vehicleId, dto);
     }
 
     @GET

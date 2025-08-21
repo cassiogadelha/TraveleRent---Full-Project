@@ -1,5 +1,7 @@
 package verso.caixa.service;
 
+import io.quarkus.cache.CacheInvalidateAll;
+import io.quarkus.cache.CacheResult;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -75,7 +77,7 @@ public class VehicleService {
         return vehicle;
     }
 
-
+    @CacheInvalidateAll(cacheName = "all-vehicles")
     public void deleteById(UUID vehicleId){
         VehicleModel vehicleToDelete = vehicleDAO.findById(vehicleId);
 
@@ -85,6 +87,7 @@ public class VehicleService {
         vehicleDAO.deleteById(vehicleId);
     }
 
+    @CacheResult(cacheName = "all-vehicles")
     public Response getVehicleList(int page, int size) {
         PanacheQuery<VehicleModel> vehicles = vehicleDAO.findAll();
         vehicles.page(Page.of(page, size));
@@ -97,6 +100,7 @@ public class VehicleService {
         }
     }
 
+    @CacheInvalidateAll(cacheName = "all-vehicles")
     public Response updateVehicle(UUID vehicleId, UpdateVehicleStatusRequestDTO dto) {
         VehicleModel vehicleModel = vehicleDAO.findById(vehicleId);
 

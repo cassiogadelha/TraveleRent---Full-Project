@@ -118,6 +118,10 @@
             <artifactId>quarkus-rest-client-jackson</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-redis-cache</artifactId>
+        </dependency>
 
     </dependencies>
 
