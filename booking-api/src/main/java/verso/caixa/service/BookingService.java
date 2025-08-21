@@ -7,9 +7,12 @@ import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jetbrains.annotations.NotNull;
 import verso.caixa.client.VehicleAPIClient;
@@ -39,6 +42,18 @@ public class BookingService {
 
     @RestClient
     private final VehicleAPIClient vehicleAPIClient;
+
+    @Inject
+    @Channel("booking-in")
+    Emitter<BookingModel> activatedEmitter;
+
+    @Inject
+    @Channel("booking-out")
+    Emitter<BookingModel> finishedEmitter;
+
+    @Inject
+    @Channel("booking-cancel")
+    Emitter<BookingModel> canceledEmitter;
 
 
     public BookingService(BookingMapper bookingMapper, BookingDAO bookingDAO, @RestClient VehicleAPIClient vehicleAPIClient, SecurityIdentity securityIdentity) {
@@ -116,14 +131,18 @@ public class BookingService {
     }
 
     @CacheInvalidate(cacheName = "all-bookings")
-    public Response checkingBooking(UUID bookingId, UpdateBookingStatusRequest dto) {
+    public Response checkBooking(UUID bookingId, UpdateBookingStatusRequest dto) {
         BookingModel bookingModel = bookingDAO.findById(bookingId);
 
         if (bookingModel == null) throw new BookingNotFoundException("Erro ao editar agendamento.", ErrorCode.NULL_BOOKING);
 
         try {
+
             bookingModel.setStatus(dto.newStatus());
+            emitStatusChange(bookingModel);
+
         } catch (RuntimeException e) {
+
             return Response.status(Response.Status.CONFLICT)
                     .entity(e.getMessage())
                     .build();
@@ -131,4 +150,13 @@ public class BookingService {
 
         return Response.noContent().build();
     }
+
+    private void emitStatusChange(BookingModel booking) {
+        switch (booking.getStatus()) {
+            case ACTIVATED -> activatedEmitter.send(booking);
+            case FINISHED -> finishedEmitter.send(booking);
+            case CANCELED -> canceledEmitter.send(booking);
+        }
+    }
+
 }

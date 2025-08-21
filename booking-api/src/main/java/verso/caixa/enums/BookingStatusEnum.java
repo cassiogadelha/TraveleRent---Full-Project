@@ -5,6 +5,7 @@ import verso.caixa.model.BookingModel;
 import java.time.LocalDate;
 
 public enum BookingStatusEnum {
+
     CREATED,
     ACTIVATED,
     CANCELED,
