@@ -76,14 +76,6 @@ public class BookingModel extends PanacheEntityBase {
         }
 
         this.status = incomingStatus;
-
-        switch (incomingStatus) {
-            case CANCELED: this.canceledAt = LocalDate.now(); break;
-            case ACTIVATED: this.activatedAt = LocalDate.now(); break;
-            case FINISHED: this.finishedAt = LocalDate.now(); break;
-        }
-
-
+        incomingStatus.applyDate(this);
     }
-
 }
