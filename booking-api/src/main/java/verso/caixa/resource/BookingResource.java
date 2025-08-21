@@ -57,7 +57,8 @@ public class BookingResource {
     @PATCH
     @Path("{id}")
     @Transactional
-    public Response updateBookingPartially(@PathParam("id") UUID vehicleId, UpdateBookingStatusRequest dto){
+    @RolesAllowed("realm-employee")
+    public Response checkingBooking(@PathParam("id") UUID vehicleId, UpdateBookingStatusRequest dto){
         return bookingService.updateBooking(vehicleId, dto);
     }
 

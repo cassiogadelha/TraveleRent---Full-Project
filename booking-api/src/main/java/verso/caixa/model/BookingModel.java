@@ -24,7 +24,8 @@ public class BookingModel extends PanacheEntityBase {
     };
 
     static {
-        BOOKING_STATUS.put(BookingStatusEnum.CREATED, Set.of(BookingStatusEnum.CANCELED, BookingStatusEnum.FINISHED));
+        BOOKING_STATUS.put(BookingStatusEnum.CREATED, Set.of(BookingStatusEnum.CANCELED, BookingStatusEnum.ACTIVATED));
+        BOOKING_STATUS.put(BookingStatusEnum.ACTIVATED, Set.of(BookingStatusEnum.FINISHED));
     }
 
     @Id
@@ -38,6 +39,9 @@ public class BookingModel extends PanacheEntityBase {
 
     private LocalDate startDate;
     private LocalDate endDate;
+    private LocalDate canceledAt;
+    private LocalDate finishedAt;
+    private LocalDate activatedAt;
 
     @Enumerated(EnumType.STRING)
     private BookingStatusEnum status = BookingStatusEnum.CREATED;
@@ -62,7 +66,9 @@ public class BookingModel extends PanacheEntityBase {
         Set<BookingStatusEnum> possibleStatus = BOOKING_STATUS.get(this.status);
 
         if (possibleStatus == null || !possibleStatus.contains(incomingStatus)) {
-            throw new IllegalBookingStatus("Não é possível mudar para esse status. Status válidos são: " + possibleStatus, ErrorCode.INVALID_STATUS);
+            throw new IllegalBookingStatus("Erro ao alterar o status do agendamento.\n"
+                    + (possibleStatus == null ? "Não é possível alterar status de um agendamento finalizado ou cancelado."
+                    : "É possível alterar o agendamento somente para o(s) statu(s): " + possibleStatus), ErrorCode.INVALID_STATUS);
         }
 
         if (incomingStatus.equals(this.status)) {
@@ -70,6 +76,13 @@ public class BookingModel extends PanacheEntityBase {
         }
 
         this.status = incomingStatus;
+
+        switch (incomingStatus) {
+            case CANCELED: this.canceledAt = LocalDate.now(); break;
+            case ACTIVATED: this.activatedAt = LocalDate.now(); break;
+            case FINISHED: this.finishedAt = LocalDate.now(); break;
+        }
+
 
     }
 

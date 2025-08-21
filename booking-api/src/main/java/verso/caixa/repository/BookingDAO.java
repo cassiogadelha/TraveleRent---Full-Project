@@ -1,10 +1,10 @@
 package verso.caixa.repository;
 
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
 import verso.caixa.model.BookingModel;
 
 import java.time.LocalDate;
@@ -49,5 +49,11 @@ public class BookingDAO implements PanacheRepositoryBase<BookingModel, UUID> {
         return find("customerId = ?1 order by startDate desc", customerId)
                 .page(Page.of(page, size))
                 .list();
+    }
+
+    public BookingModel findByCustomerIdAndBookingId(UUID customerId, UUID bookingId) {
+        return find("bookingId = :bookingId AND customerId = :customerId",
+                Parameters.with("bookingId", bookingId)
+                        .and("customerId", customerId)).firstResult();
     }
 }

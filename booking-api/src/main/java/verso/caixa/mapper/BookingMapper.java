@@ -2,6 +2,7 @@ package verso.caixa.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.dto.ResponseBookingDTO;
 import verso.caixa.model.BookingModel;

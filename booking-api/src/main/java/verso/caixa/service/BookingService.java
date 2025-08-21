@@ -4,9 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
@@ -17,6 +15,7 @@ import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.dto.ResponseBookingDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
 import verso.caixa.enums.ErrorCode;
+import verso.caixa.exception.BookingNotFoundException;
 import verso.caixa.exception.IllegalEndDateException;
 import verso.caixa.exception.VehicleException;
 import verso.caixa.mapper.BookingMapper;
@@ -64,11 +63,6 @@ public class BookingService {
             throw new VehicleException("O veículo está em manutenção, portanto, indisponível para aluguel!.", ErrorCode.UNAVAILABLE_VEHICLE);
         }
 
-        //Log.info("ALREADY RENTED: " + bookingDAO.isVehicleAlreadyRented(dto.vehicleId()));
-        //if (bookingDAO.isVehicleAlreadyRented(dto.vehicleId())) {
-            //throw new VehicleException("O veículo já está alugado!.", ErrorCode.UNAVAILABLE_VEHICLE);
-       // }
-
         BookingModel newBooking = bookingMapper.toEntity(dto);
         newBooking.setCustomerName(customerName);
         newBooking.setCustomerId(customerId);
@@ -78,7 +72,7 @@ public class BookingService {
         URI location = URI.create("/api/v1/bookings/" + newBooking.getBookingId());
 
         return Response.created(location)
-                .entity(newBooking)
+                .entity(bookingMapper.toResponseDTO(newBooking))
                 .build();
     }
 
@@ -120,7 +114,7 @@ public class BookingService {
     public Response updateBooking(UUID bookingId, UpdateBookingStatusRequest dto) {
         BookingModel bookingModel = bookingDAO.findById(bookingId);
 
-        if (bookingModel == null) return Response.status(404).build();
+        if (bookingModel == null) throw new BookingNotFoundException("Erro ao editar agendamento.", ErrorCode.NULL_BOOKING);
 
         try {
             bookingModel.setStatus(dto.newStatus());
