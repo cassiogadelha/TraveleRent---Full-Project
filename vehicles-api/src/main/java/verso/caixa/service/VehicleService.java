@@ -124,7 +124,7 @@ public class VehicleService {
             return Response.status(Response.Status.CONFLICT).build();
         }
 
-        if (dto.newStatus().toString().equals("UNDER_MAINTENANCE"))
+        if (dto.newStatus() == VehicleStatusEnum.UNDER_MAINTENANCE)
             publishVehicleMaintenance(vehicleId);
 
         return Response.noContent().build();

@@ -28,6 +28,7 @@ import verso.caixa.exception.VehicleException;
 import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
 import verso.caixa.repository.BookingDAO;
+import verso.caixa.twilio.SmsService;
 
 import java.net.URI;
 import java.util.List;
@@ -41,6 +42,7 @@ public class BookingService {
     BookingMapper bookingMapper;
     BookingDAO bookingDAO;
     SecurityIdentity securityIdentity;
+    SmsService smsService;
 
     @RestClient
     private final VehicleAPIClient vehicleAPIClient;
@@ -58,11 +60,16 @@ public class BookingService {
     Emitter<BookingModel> canceledEmitter;
 
 
-    public BookingService(BookingMapper bookingMapper, BookingDAO bookingDAO, @RestClient VehicleAPIClient vehicleAPIClient, SecurityIdentity securityIdentity) {
+    public BookingService(BookingMapper bookingMapper,
+                          BookingDAO bookingDAO,
+                          @RestClient VehicleAPIClient vehicleAPIClient,
+                          SecurityIdentity securityIdentity,
+                          SmsService smsService) {
         this.securityIdentity = securityIdentity;
         this.bookingMapper = bookingMapper;
         this.bookingDAO = bookingDAO;
         this.vehicleAPIClient = vehicleAPIClient;
+        this.smsService = smsService;
     }
 
     @Transactional
@@ -170,8 +177,7 @@ public class BookingService {
             possibleBooking.setStatus(BookingStatusEnum.CANCELED);
         }
 
-        System.out.println("AGENDAMENTO CANCELADO!!! VEÍCULO ENTROU EM MANUTENÇÃO");
-        //NOTIFICAR USUÁRIO
-
+        System.out.println("RESERVA CANCELADA!!! VEÍCULO ENTROU EM MANUTENÇÃO");
+        smsService.sendCancellationNotice("+5574999254283");
     }
 }
