@@ -15,14 +15,13 @@ public class SmsService {
     Dotenv dotenv = Dotenv.load();
     String accountSid = dotenv.get("TWILIO_ACCOUNT_SID");
     String authToken = dotenv.get("TWILIO_AUTH_TOKEN");
-    String fromNumber = dotenv.get("+18482258954");
+    String fromNumber = dotenv.get("+18482258947");
 
     @PostConstruct
     void initTwilio() {
         Twilio.init(accountSid, authToken);
     }
 
->>>>>>> 3f21ce5 (twilio credentials .env)
     public void sendCancellationNotice(String toNumber) {
         Message.creator(
                 new PhoneNumber(toNumber),
