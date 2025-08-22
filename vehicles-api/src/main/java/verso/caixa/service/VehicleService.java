@@ -8,10 +8,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import verso.caixa.dto.CreateVehicleRequestDTO;
 import verso.caixa.dto.UpdateVehicleStatusRequestDTO;
 import verso.caixa.dto.VehicleResponseDTO;
 import verso.caixa.enums.ErrorCode;
+import verso.caixa.enums.VehicleStatusEnum;
 import verso.caixa.exception.VehicleDeletionException;
 import verso.caixa.exception.VehicleNotFoundException;
 import verso.caixa.mapper.VehicleMapper;
@@ -20,12 +23,21 @@ import verso.caixa.model.VehicleModel;
 import verso.caixa.repository.VehicleDAO;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
 @Getter
 @ApplicationScoped //cria somente uma instancia durante todo o ciclo de vida da aplicação
 public class VehicleService {
+
+    @Inject
+    @Channel("vehicle-maintenance")
+    Emitter<UUID> emitter;
+
+    public void publishVehicleMaintenance(UUID vehicleId) {
+        emitter.send(vehicleId);
+    }
 
     private final VehicleMapper vehicleMapper;
     private final VehicleDAO vehicleDAO;
@@ -111,6 +123,9 @@ public class VehicleService {
         } catch (RuntimeException e) {
             return Response.status(Response.Status.CONFLICT).build();
         }
+
+        if (dto.newStatus().toString().equals("UNDER_MAINTENANCE"))
+            publishVehicleMaintenance(vehicleId);
 
         return Response.noContent().build();
     }

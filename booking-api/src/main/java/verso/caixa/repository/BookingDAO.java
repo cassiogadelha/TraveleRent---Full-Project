@@ -51,9 +51,9 @@ public class BookingDAO implements PanacheRepositoryBase<BookingModel, UUID> {
                 .list();
     }
 
-    public BookingModel findByCustomerIdAndBookingId(UUID customerId, UUID bookingId) {
-        return find("bookingId = :bookingId AND customerId = :customerId",
-                Parameters.with("bookingId", bookingId)
-                        .and("customerId", customerId)).firstResult();
+    public BookingModel findByVehicleId(UUID vehicleId) {
+        return find("vehicleId = :vehicleId",
+                Parameters.with("vehicleId", vehicleId))
+                .firstResult();
     }
 }

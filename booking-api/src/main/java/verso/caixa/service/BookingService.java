@@ -19,6 +19,8 @@ import verso.caixa.client.VehicleAPIClient;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.dto.ResponseBookingDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
+import verso.caixa.dto.VehicleStatusChangedEvent;
+import verso.caixa.enums.BookingStatusEnum;
 import verso.caixa.enums.ErrorCode;
 import verso.caixa.exception.BookingNotFoundException;
 import verso.caixa.exception.IllegalEndDateException;
@@ -159,4 +161,17 @@ public class BookingService {
         }
     }
 
+    @Transactional
+    public void checkVehicle(UUID vehicleId) {
+
+        BookingModel possibleBooking = bookingDAO.findByVehicleId(vehicleId);
+
+        if (possibleBooking != null) {
+            possibleBooking.setStatus(BookingStatusEnum.CANCELED);
+        }
+
+        System.out.println("AGENDAMENTO CANCELADO!!! VEÍCULO ENTROU EM MANUTENÇÃO");
+        //NOTIFICAR USUÁRIO
+
+    }
 }
