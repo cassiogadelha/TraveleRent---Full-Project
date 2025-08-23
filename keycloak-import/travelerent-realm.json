@@ -15,6 +15,9 @@
   "users": [
     {
       "username": "admin",
+      "email": "admin@gmail.com",
+      "firstName": "Admin",
+      "lastName": "Admin",
       "enabled": true,
       "credentials": [
         {
@@ -53,7 +56,24 @@
       "credentials": [
         {
           "type": "password",
-          "value": "carlosandrade",
+          "value": "carlos0",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "realm-customer"
+      ]
+    },
+    {
+      "username": "employee",
+      "email": "employee@gmail.com",
+      "firstName": "Employee",
+      "lastName": "Employee",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "employee0",
           "temporary": false
         }
       ],
