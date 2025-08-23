@@ -1,12 +1,12 @@
 package verso.caixa.service;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import verso.caixa.client.VehicleAPIClient;
 import verso.caixa.dto.CreateBookingRequestDTO;
-import verso.caixa.dto.ResponseBookingDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
 import verso.caixa.enums.BookingStatusEnum;
 import verso.caixa.enums.ErrorCode;
@@ -17,6 +17,7 @@ import verso.caixa.helpers.BookingTestHelper;
 import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
 import verso.caixa.repository.BookingDAO;
+import verso.caixa.twilio.SmsService;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -32,6 +33,8 @@ public class UnityTests {
     BookingMapper bookingMapper;
     BookingDAO bookingDAO;
     VehicleAPIClient vehicleAPIClient;
+    SecurityIdentity securityIdentity;
+    SmsService smsService;
 
     BookingService bookingService;
 
@@ -40,21 +43,22 @@ public class UnityTests {
         bookingMapper = mock(BookingMapper.class);
         bookingDAO = mock(BookingDAO.class);
         vehicleAPIClient = mock(VehicleAPIClient.class);
+        securityIdentity = mock(SecurityIdentity.class);
+        smsService = mock(SmsService.class);
 
-        bookingService = new BookingService(bookingMapper, bookingDAO, vehicleAPIClient);
+        bookingService = new BookingService(bookingMapper, bookingDAO, vehicleAPIClient, securityIdentity, smsService);
     }
 
 
     @Test
     void shouldThrowIllegalEndDateExceptionWhenEndDateBeforeStartDate() {
         CreateBookingRequestDTO dto = BookingTestHelper.buildCustomBookingDTO(
-            "João",
             LocalDate.now(),
             LocalDate.now().minusDays(1)
         );
 
         assertThrows(IllegalEndDateException.class, () -> {
-            bookingService.createBooking(dto);
+            bookingService.createBooking(dto, UUID.randomUUID(), "José Conceição");
         });
     }
 
@@ -65,7 +69,7 @@ public class UnityTests {
         CreateBookingRequestDTO dto = BookingTestHelper.buildValidBookingDTO();
 
         assertThrows(VehicleException.class, () -> {
-            bookingService.createBooking(dto);
+            bookingService.createBooking(dto, UUID.randomUUID(), "Carlos Machado");
         });
     }
 
@@ -77,7 +81,7 @@ public class UnityTests {
         CreateBookingRequestDTO dto = BookingTestHelper.buildValidBookingDTO();
 
         assertThrows(VehicleException.class, () -> {
-            bookingService.createBooking(dto);
+            bookingService.createBooking(dto, UUID.randomUUID(), "Gustavo Campos");
         });
     }
 
@@ -91,7 +95,7 @@ public class UnityTests {
 
         CreateBookingRequestDTO dto = BookingTestHelper.buildValidBookingDTO();
 
-        Response response = bookingService.createBooking(dto);
+        Response response = bookingService.createBooking(dto, UUID.randomUUID(), "Ana Silva");
 
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
         assertEquals(bookingModel, response.getEntity());
@@ -101,7 +105,7 @@ public class UnityTests {
     void shouldReturn404WhenBookingNotFoundOnUpdate() {
         when(bookingDAO.findById(any())).thenReturn(null);
 
-        Response response = bookingService.updateBooking(UUID.randomUUID(), new UpdateBookingStatusRequest(BookingStatusEnum.FINISHED));
+        Response response = bookingService.checkBooking(UUID.randomUUID(), new UpdateBookingStatusRequest(BookingStatusEnum.FINISHED));
 
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
@@ -114,7 +118,7 @@ public class UnityTests {
 
         when(bookingDAO.findById(any())).thenReturn(model);
 
-        Response response = bookingService.updateBooking(UUID.randomUUID(), new UpdateBookingStatusRequest(BookingStatusEnum.FINISHED));
+        Response response = bookingService.checkBooking(UUID.randomUUID(), new UpdateBookingStatusRequest(BookingStatusEnum.FINISHED));
 
         assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
     }
@@ -125,7 +129,7 @@ public class UnityTests {
 
         when(bookingDAO.findById(any())).thenReturn(model);
 
-        Response response = bookingService.updateBooking(UUID.randomUUID(), new UpdateBookingStatusRequest(BookingStatusEnum.CANCELED));
+        Response response = bookingService.checkBooking(UUID.randomUUID(), new UpdateBookingStatusRequest(BookingStatusEnum.CANCELED));
 
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
@@ -158,7 +162,7 @@ public class UnityTests {
         when(bookingDAO.findAll()).thenReturn(mock(PanacheQuery.class));
         when(bookingDAO.findAll().list()).thenReturn(Collections.emptyList());
 
-        Response response = bookingService.getBookingList(0, 10);
+        Response response = bookingService.getAllBookings(UUID.randomUUID(), 0, 10, false);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertTrue(response.getEntity().toString().contains("lista de agendamentos está vazia"));
@@ -174,7 +178,7 @@ public class UnityTests {
         when(bookingDAO.findAll()).thenReturn(queryMock);
         when(bookingMapper.toResponseDTOList(any())).thenReturn(List.of(BookingTestHelper.buildValidResponseBookingDTO()));
 
-        Response response = bookingService.getBookingList(0, 10);
+        Response response = bookingService.getAllBookings(UUID.randomUUID(), 0, 10, false);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertNotNull(response.getEntity());

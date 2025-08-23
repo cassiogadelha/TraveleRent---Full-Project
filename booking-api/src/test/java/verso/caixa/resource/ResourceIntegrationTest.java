@@ -3,6 +3,7 @@ package verso.caixa.resource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
@@ -24,6 +25,7 @@ import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
 import verso.caixa.repository.BookingDAO;
 import verso.caixa.service.BookingService;
+import verso.caixa.twilio.SmsService;
 import verso.caixa.validations.BookingConflictValidator;
 
 import java.time.Instant;
@@ -45,6 +47,12 @@ public class ResourceIntegrationTest {
     @InjectMock
     BookingDAO bookingDAO;
 
+    @InjectMock
+    SecurityIdentity securityIdentity;
+
+    @InjectMock
+    SmsService smsService;
+
     @Test
     void shouldCreateBookingSuccessfully() {
         BookingDAO bookingDAO = Mockito.mock(BookingDAO.class);
@@ -55,27 +63,26 @@ public class ResourceIntegrationTest {
                 "AVAILABLE"
         ));
 
-        BookingService bookingService = new BookingService(bookingMapper, bookingDAO, vehicleAPIClient);
+        BookingService bookingService = new BookingService(bookingMapper, bookingDAO, vehicleAPIClient, securityIdentity, smsService);
 
         BookingModel fakeBooking = BookingTestHelper.buildValidBooking();
 
         CreateBookingRequestDTO dto = new CreateBookingRequestDTO(UUID.randomUUID(),
-                "Sara Campos",
                 LocalDate.now().plusDays(2),
                 LocalDate.now().plusDays(3));
 
         Mockito.when(bookingMapper.toEntity(dto)).thenReturn(fakeBooking);
 
         Assertions.assertDoesNotThrow(() -> {
-            bookingService.createBooking(dto);
+            bookingService.createBooking(dto, UUID.randomUUID(), "Jorge Souza");
         });
     }
 
     @Test
     void shouldReturnBadRequestForBookingWithInvalidStartDate() throws JsonProcessingException {
 
-        CreateBookingRequestDTO bookingDto = new CreateBookingRequestDTO(UUID.randomUUID(),
-                "Sara Campos",
+        CreateBookingRequestDTO bookingDto = new CreateBookingRequestDTO(
+                UUID.randomUUID(),
                 LocalDate.now().minusDays(2),
                 LocalDate.now().plusDays(3));
 
@@ -102,7 +109,6 @@ public class ResourceIntegrationTest {
         // DTO com período que vai conflitar
         CreateBookingRequestDTO dto = new CreateBookingRequestDTO(
                 UUID.randomUUID(),
-                "Laura Teste",
                 LocalDate.now().plusDays(5),
                 LocalDate.now().plusDays(7)
         );
@@ -120,15 +126,19 @@ public class ResourceIntegrationTest {
         Mockito.when(bookingDAO.findById(fakeBooking.getBookingId())).thenReturn(fakeBooking);
 
         BookingService bookingService = new BookingService(
-                Mockito.mock(BookingMapper.class), bookingDAO, Mockito.mock(VehicleAPIClient.class)
+                Mockito.mock(BookingMapper.class),
+                bookingDAO,
+                Mockito.mock(VehicleAPIClient.class),
+                Mockito.mock(SecurityIdentity.class),
+                Mockito.mock(SmsService.class)
         );
 
         UpdateBookingStatusRequest dto = new UpdateBookingStatusRequest(BookingStatusEnum.CANCELED);
 
-        // Act
-        Response response = bookingService.updateBooking(fakeBooking.getBookingId(), dto);
 
-        // Assert
+        Response response = bookingService.checkBooking(fakeBooking.getBookingId(), dto);
+
+
         assertEquals(204, response.getStatus(), "Cancelamento deveria retornar 204");
         assertEquals(BookingStatusEnum.CANCELED, fakeBooking.getStatus(), "Status deveria ter sido alterado");
     }
@@ -140,19 +150,23 @@ public class ResourceIntegrationTest {
         Mockito.when(bookingDAO.findById(fakeBooking.getBookingId())).thenReturn(fakeBooking);
 
         BookingService bookingService = new BookingService(
-                Mockito.mock(BookingMapper.class), bookingDAO, Mockito.mock(VehicleAPIClient.class)
+                Mockito.mock(BookingMapper.class),
+                bookingDAO,
+                Mockito.mock(VehicleAPIClient.class),
+                Mockito.mock(SecurityIdentity.class),
+                Mockito.mock(SmsService.class)
         );
 
         UpdateBookingStatusRequest dto = new UpdateBookingStatusRequest(BookingStatusEnum.CANCELED);
 
-        Response response = bookingService.updateBooking(fakeBooking.getBookingId(), dto);
+        Response response = bookingService.checkBooking(fakeBooking.getBookingId(), dto);
 
         assertEquals(204, response.getStatus(), "Cancelamento deveria retornar 204");
         assertEquals(BookingStatusEnum.CANCELED, fakeBooking.getStatus(), "Status deveria ter sido alterado");
 
         dto = new UpdateBookingStatusRequest(BookingStatusEnum.CREATED);
 
-        response = bookingService.updateBooking(fakeBooking.getBookingId(), dto);
+        response = bookingService.checkBooking(fakeBooking.getBookingId(), dto);
 
         assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
         assertTrue(response.getEntity().toString().contains("Status válidos"), "Mensagem de erro esperada");

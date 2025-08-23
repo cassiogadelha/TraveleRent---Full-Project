@@ -1,0 +1,97 @@
+{
+  "realm": "travelerent",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "realm-admin",
+        "description": "Administrador do realm travelerent",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "travelerent"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "realm-admin"
+      ]
+    },
+    {
+      "username": "anasouza0",
+      "email": "anasouza0@gmail.com",
+      "firstName": "Ana",
+      "lastName": "Souza",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ana0",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "realm-customer"
+      ]
+    },
+    {
+      "username": "carlosandrade",
+      "email": "carlosandrade@gmail.com",
+      "firstName": "Carlos",
+      "lastName": "Andrade",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "carlosandrade",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "realm-customer"
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "bookings-backend-service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "cuv0nz1enzpp8aTLruUOLthU6NEyU0vs",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [],
+      "webOrigins": [],
+      "authorizationServicesEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "defaultRoles": []
+    },
+    {
+      "clientId": "vehicles-backend-service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "0CSfjWlFuusccCAd4oSV3AiduukffS6t",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [],
+      "webOrigins": [],
+      "authorizationServicesEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "defaultRoles": []
+    }
+  ]
+}

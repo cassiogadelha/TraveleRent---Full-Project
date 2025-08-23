@@ -21,7 +21,7 @@ public class WireMockVehicleAPI implements QuarkusTestResourceLifecycleManager {
                 .willReturn(okJson("{ \"status\": \"AVAILABLE\" }")));
 
         /*
-        intercepta qualquer requisição HTTP GET para a rota /api/v1/vehicles/{algum-UUID} e devolver uma resposta
+        intercepta qualquer requisição HTTP GET para a rota /api/v1/vehicles/{algum-UUID} e devolve uma resposta
         estática com JSON dizendo que o veículo está disponível.
 
         get(...)

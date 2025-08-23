@@ -23,7 +23,6 @@ public class BookingTestHelper {
     public static CreateBookingRequestDTO buildValidBookingDTO() {
         return new CreateBookingRequestDTO(
                 UUID.randomUUID(),
-                "Vivi Araújo",
                 LocalDate.now().plusDays(1),
                 LocalDate.now().plusDays(3)
         );
@@ -33,8 +32,8 @@ public class BookingTestHelper {
         return new BookingModel(UUID.randomUUID(), start, end, customerId, vehicleId);
     }
 
-    public static CreateBookingRequestDTO buildCustomBookingDTO(String name, LocalDate start, LocalDate end) {
-        return new CreateBookingRequestDTO(UUID.randomUUID(), name, start, end);
+    public static CreateBookingRequestDTO buildCustomBookingDTO( LocalDate start, LocalDate end) {
+        return new CreateBookingRequestDTO(UUID.randomUUID(), start, end);
     }
 
     public static ResponseBookingDTO buildValidResponseBookingDTO(){
@@ -44,7 +43,11 @@ public class BookingTestHelper {
                 "Márcio Santos",
                 LocalDate.now(),
                 LocalDate.now(),
-                BookingStatusEnum.CREATED);
+                BookingStatusEnum.CREATED,
+                null,
+                null,
+                null);
+
     }
 }
 

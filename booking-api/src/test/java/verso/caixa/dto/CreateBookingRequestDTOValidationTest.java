@@ -24,7 +24,6 @@ public class CreateBookingRequestDTOValidationTest {
     void shouldFailWhenVehicleIdIsNull() {
         CreateBookingRequestDTO dto = new CreateBookingRequestDTO(
                 null,
-                "João",
                 LocalDate.now(),
                 LocalDate.now().plusDays(1)
         );
@@ -37,9 +36,8 @@ public class CreateBookingRequestDTOValidationTest {
     void shouldFailWhenCustomerNameIsNull() {
         CreateBookingRequestDTO dto = new CreateBookingRequestDTO(
                 UUID.randomUUID(),
-                null,
                 LocalDate.now(),
-                null
+                LocalDate.now()
         );
 
         Set<ConstraintViolation<CreateBookingRequestDTO>> violations = validator.validate(dto);
@@ -50,7 +48,6 @@ public class CreateBookingRequestDTOValidationTest {
     void shouldFailWhenStartDateIsInThePast() {
         CreateBookingRequestDTO dto = new CreateBookingRequestDTO(
                 null,
-                "João",
                 LocalDate.now().minusDays(1),
                 LocalDate.now().plusDays(1)
         );
@@ -63,7 +60,6 @@ public class CreateBookingRequestDTOValidationTest {
     void shouldFailWhenEndDateIsNotInFuture() {
         CreateBookingRequestDTO dto = new CreateBookingRequestDTO(
                 null,
-                "João",
                 LocalDate.now(),
                 LocalDate.now()
         );

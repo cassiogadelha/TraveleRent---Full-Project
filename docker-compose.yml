@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    ports:
+      - "8543:8443"
+    environment:
+      KC_DB: dev-file
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTPS_KEY_STORE_PASSWORD: changeit
+    command: >
+      start-dev
+      --import-realm
+      --hostname-strict=false
+      --https-key-store-file=/etc/keycloak-keystore.jks
+    volumes:
+      - ./keycloak-import/keycloak-keystore.jks:/etc/keycloak-keystore.jks
+      - ./keycloak-import/travelerent-realm.json:/opt/keycloak/data/import/travelerent-realm.json
