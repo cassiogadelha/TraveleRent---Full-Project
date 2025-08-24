@@ -2,7 +2,6 @@ package verso.caixa.service;
 
 import io.quarkus.cache.CacheInvalidate;
 import io.quarkus.cache.CacheResult;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -19,7 +18,6 @@ import verso.caixa.client.VehicleAPIClient;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.dto.ResponseBookingDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
-import verso.caixa.dto.VehicleStatusChangedEvent;
 import verso.caixa.enums.BookingStatusEnum;
 import verso.caixa.enums.ErrorCode;
 import verso.caixa.exception.BookingNotFoundException;
@@ -59,6 +57,8 @@ public class BookingService {
     @Channel("booking-cancel")
     Emitter<BookingModel> canceledEmitter;
 
+    record Vehicle(String status) {}
+
 
     public BookingService(BookingMapper bookingMapper,
                           BookingDAO bookingDAO,
@@ -76,10 +76,14 @@ public class BookingService {
     @CacheInvalidate(cacheName = "all-bookings")
     public Response createBooking(@NotNull CreateBookingRequestDTO dto, UUID customerId, String customerName) {
 
+        Log.info("ENTERED SERVICE: ");
+
         if (dto.endDate().isBefore(dto.startDate()))
             throw new IllegalEndDateException("A data de término não pode ser anterior a de início", ErrorCode.INVALID_END_DATE);
 
+        Log.info("BEFORE API VEHICLE: ");
         VehicleAPIClient.Vehicle vehicle = vehicleAPIClient.findVehicleById(dto.vehicleId());
+        Log.info("AFTER API VECHILE: ");
 
         if (vehicle == null) {
             throw new VehicleException("O veículo não existe!", ErrorCode.NULL_VEHICLE);

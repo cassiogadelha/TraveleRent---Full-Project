@@ -15,7 +15,7 @@ public class SmsService {
     Dotenv dotenv = Dotenv.load();
     String accountSid = dotenv.get("TWILIO_ACCOUNT_SID");
     String authToken = dotenv.get("TWILIO_AUTH_TOKEN");
-    String fromNumber = dotenv.get("+18482258947");
+    String fromNumber = dotenv.get("TWILIO_FROM_NUMBER");
 
     @PostConstruct
     void initTwilio() {

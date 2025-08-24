@@ -3,6 +3,7 @@ package verso.caixa.service;
 import io.quarkus.cache.CacheInvalidateAll;
 import io.quarkus.cache.CacheResult;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -10,6 +11,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import verso.caixa.dto.CreateVehicleRequestDTO;
 import verso.caixa.dto.UpdateVehicleStatusRequestDTO;
 import verso.caixa.dto.VehicleResponseDTO;
@@ -23,7 +25,6 @@ import verso.caixa.model.VehicleModel;
 import verso.caixa.repository.VehicleDAO;
 
 import java.net.URI;
-import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,6 +73,7 @@ public class VehicleService {
     }
 
     public Response findById(UUID vehicleId){
+        Log.info("BOOKING AQUI");
         VehicleModel vehicle = vehicleDAO.findById(vehicleId);
 
         if (vehicle == null)

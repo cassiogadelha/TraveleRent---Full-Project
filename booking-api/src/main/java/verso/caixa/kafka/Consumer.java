@@ -17,5 +17,4 @@ public class Consumer {
     public void onVehicleMaintenance(UUID vehicleId) {
         bookingService.checkVehicle(vehicleId);
     }
-
 }

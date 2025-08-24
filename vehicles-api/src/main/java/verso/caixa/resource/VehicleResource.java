@@ -1,5 +1,6 @@
 package verso.caixa.resource;
 
+import io.quarkus.logging.Log;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.transaction.Transactional;
@@ -44,6 +45,7 @@ public class VehicleResource {
     @GET
     @Path("{vehicleId}")
     public Response findById(@PathParam("vehicleId") UUID vehicleId){
+        Log.info("BOOKING AQUI");
         return vehicleService.findById(vehicleId);
     }
 
