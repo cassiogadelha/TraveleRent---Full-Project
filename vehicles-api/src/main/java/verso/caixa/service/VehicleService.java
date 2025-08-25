@@ -7,6 +7,8 @@ import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -19,12 +21,16 @@ import verso.caixa.enums.ErrorCode;
 import verso.caixa.enums.VehicleStatusEnum;
 import verso.caixa.exception.VehicleDeletionException;
 import verso.caixa.exception.VehicleNotFoundException;
+import verso.caixa.kafka.Producer;
+import verso.caixa.kafka.VehicleProducerDTO;
 import verso.caixa.mapper.VehicleMapper;
 import verso.caixa.model.MaintenanceModel;
 import verso.caixa.model.VehicleModel;
 import verso.caixa.repository.VehicleDAO;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,10 +48,12 @@ public class VehicleService {
 
     private final VehicleMapper vehicleMapper;
     private final VehicleDAO vehicleDAO;
+    private final Producer producer;
 
-    public VehicleService(VehicleDAO vehicleDAO, VehicleMapper vehicleMapper) {
+    public VehicleService(VehicleDAO vehicleDAO, VehicleMapper vehicleMapper, Producer producer) {
         this.vehicleDAO = vehicleDAO;
         this.vehicleMapper = vehicleMapper;
+        this.producer = producer;
 
     }
 
@@ -59,6 +67,11 @@ public class VehicleService {
 
             // Persistência em cascata
             vehicleDAO.persist(vehicle);
+
+            producer.publishVehicleCreation(new VehicleProducerDTO(
+                    vehicle.vehicleId,
+                    vehicle.getStatus().toString()
+            ));
 
             URI location = URI.create("/api/v1/vehicles/" + vehicle.getVehicleId());
             VehicleResponseDTO responseDTO = vehicleMapper.toResponseDTO(vehicle);
@@ -101,16 +114,20 @@ public class VehicleService {
         vehicleDAO.deleteById(vehicleId);
     }
 
-    @CacheResult(cacheName = "all-vehicles")
-    public Response getVehicleList(int page, int size) {
+    public List<VehicleResponseDTO> getVehicleListRaw(int page, int size) {
         PanacheQuery<VehicleModel> vehicles = vehicleDAO.findAll();
         vehicles.page(Page.of(page, size));
+        return vehicleMapper.toResponseDTOList(vehicles.list());
+    }
 
-        if (vehicles.list().isEmpty()) {
+    public Response getVehicleList(int page, int size) {
+        List<VehicleResponseDTO> vehicleListRaw = getVehicleListRaw(page, size);
+
+        if (vehicleListRaw.isEmpty()) {
             Map<String, String> response = Map.of("mensagem", "A lista de veículos está vazia."); //cria um map imutavel para ser convertido facilmente em Json
             return Response.ok(response).build();
         } else {
-            return Response.ok(vehicleMapper.toResponseDTOList(vehicles.list())).build();
+            return Response.ok(vehicleListRaw).build();
         }
     }
 
@@ -130,6 +147,29 @@ public class VehicleService {
             publishVehicleMaintenance(vehicleId);
 
         return Response.noContent().build();
+    }
+
+    @Transactional
+    public Response createVehicleList(@Valid List<@Valid CreateVehicleRequestDTO> dtoList) {
+
+        producer.sendVehicleCreationList(dtoList);
+        return Response.accepted().entity("Veículos enviados para processamento").build();
+    }
+
+    @Transactional
+    public void createVehicleFromKafka(CreateVehicleRequestDTO dto) {
+        VehicleModel vehicle = vehicleMapper.toEntity(dto);
+
+        for (MaintenanceModel m : vehicle.getMaintenances()) {
+            m.setVehicle(vehicle);
+        }
+
+        vehicleDAO.persist(vehicle);
+
+        producer.publishVehicleCreation(new VehicleProducerDTO(
+                vehicle.getVehicleId(),
+                vehicle.getStatus().toString()
+        ));
     }
 }
 

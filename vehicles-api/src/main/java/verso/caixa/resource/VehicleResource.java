@@ -14,6 +14,7 @@ import verso.caixa.dto.CreateVehicleRequestDTO;
 import verso.caixa.dto.UpdateVehicleStatusRequestDTO;
 import verso.caixa.service.VehicleService;
 
+import java.util.List;
 import java.util.UUID;
 
 @Path("/api/v1/vehicles")
@@ -34,6 +35,13 @@ public class VehicleResource {
     public Response createVehicle(@Valid CreateVehicleRequestDTO dto, @Context SecurityContext ctx){
         System.out.println(ctx.getUserPrincipal().getName());
         return vehicleService.createVehicle(dto);
+    }
+
+    @POST
+    @Path("/batch")
+    @RolesAllowed({"realm-admin"})
+    public Response createVehicleList(@Valid List<CreateVehicleRequestDTO> dtoList) {
+        return vehicleService.createVehicleList(dtoList);
     }
 
     @GET
