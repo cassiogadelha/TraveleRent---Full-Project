@@ -12,7 +12,9 @@ import jakarta.ws.rs.core.Response;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
 import verso.caixa.exception.RemoteServiceException;
+import verso.caixa.model.VehicleStatus;
 import verso.caixa.service.BookingService;
+import verso.caixa.service.VehicleStatusService;
 
 import java.util.UUID;
 
@@ -22,10 +24,12 @@ import java.util.UUID;
 public class BookingResource {
     private final BookingService bookingService;
     private final SecurityIdentity securityIdentity;
+    private final VehicleStatusService vehicleStatusService;
 
-    public BookingResource(BookingService bookingService, SecurityIdentity securityIdentity) {
+    public BookingResource(BookingService bookingService, SecurityIdentity securityIdentity, VehicleStatusService vehicleStatusService) {
         this.bookingService = bookingService;
         this.securityIdentity = securityIdentity;
+        this.vehicleStatusService = vehicleStatusService;
     }
 
     @POST
@@ -45,6 +49,15 @@ public class BookingResource {
                                     @QueryParam("size") @DefaultValue("10") int size){
 
         return bookingService.getAllBookings(null, page, size, true);
+    }
+
+    @GET
+    @Path("/vehicles-status")
+    @RolesAllowed("realm-admin")
+    public Response getVehicleStatus(@QueryParam("page") @DefaultValue("0") int page,
+                                    @QueryParam("size") @DefaultValue("30") int size){
+
+        return vehicleStatusService.getVehicleStatus(page, size);
     }
 
     @GET

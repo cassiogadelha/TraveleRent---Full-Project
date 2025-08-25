@@ -25,7 +25,9 @@ import verso.caixa.exception.IllegalEndDateException;
 import verso.caixa.exception.VehicleException;
 import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
+import verso.caixa.model.VehicleStatus;
 import verso.caixa.repository.BookingDAO;
+import verso.caixa.repository.VehicleStatusDAO;
 import verso.caixa.twilio.SmsService;
 
 import java.net.URI;
@@ -57,7 +59,8 @@ public class BookingService {
     @Channel("booking-cancel")
     Emitter<BookingModel> canceledEmitter;
 
-    record Vehicle(String status) {}
+    record Vehicle(String status) {
+    }
 
 
     public BookingService(BookingMapper bookingMapper,

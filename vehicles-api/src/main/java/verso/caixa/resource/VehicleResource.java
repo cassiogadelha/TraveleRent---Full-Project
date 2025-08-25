@@ -46,7 +46,7 @@ public class VehicleResource {
 
     @GET
     public Response findAllVehicles(@QueryParam("page") @DefaultValue("0") int page,
-                                    @QueryParam("size") @DefaultValue("10") int size){
+                                    @QueryParam("size") @DefaultValue("30") int size){
         return vehicleService.getVehicleList(page, size);
     }
 
