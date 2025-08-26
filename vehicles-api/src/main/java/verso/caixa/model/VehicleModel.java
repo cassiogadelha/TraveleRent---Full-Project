@@ -19,7 +19,6 @@ public class VehicleModel extends PanacheEntityBase{
 
     static {
         VEHICLE_STATE_MACHINE.put(VehicleStatusEnum.AVAILABLE, Set.of(VehicleStatusEnum.UNDER_MAINTENANCE));
-        //VEHICLE_STATE_MACHINE.put(VehicleStatusEnum.RENTED, Set.of(VehicleStatusEnum.AVAILABLE, VehicleStatusEnum.UNDER_MAINTENANCE));
         VEHICLE_STATE_MACHINE.put(VehicleStatusEnum.UNDER_MAINTENANCE, Set.of(VehicleStatusEnum.AVAILABLE));
     }
 
@@ -79,7 +78,7 @@ public class VehicleModel extends PanacheEntityBase{
         if (possibleStatus.contains(incomingStatus)) {
             this.status = incomingStatus;
         } else {
-            throw new IllegalArgumentException("Validation error, possible status are: " + possibleStatus);
+            throw new IllegalArgumentException("Erro de validação. Status disponíveis para mudança: " + possibleStatus);
         }
     }
 

@@ -13,7 +13,6 @@ import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import verso.caixa.dto.CreateVehicleRequestDTO;
 import verso.caixa.dto.UpdateVehicleStatusRequestDTO;
 import verso.caixa.dto.VehicleResponseDTO;
@@ -29,7 +28,6 @@ import verso.caixa.model.VehicleModel;
 import verso.caixa.repository.VehicleDAO;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,14 +35,6 @@ import java.util.UUID;
 @Getter
 @ApplicationScoped //cria somente uma instancia durante todo o ciclo de vida da aplicação
 public class VehicleService {
-
-    @Inject
-    @Channel("vehicle-maintenance")
-    Emitter<UUID> emitter;
-
-    public void publishVehicleMaintenance(UUID vehicleId) {
-        emitter.send(vehicleId);
-    }
 
     private final VehicleMapper vehicleMapper;
     private final VehicleDAO vehicleDAO;
@@ -57,6 +47,8 @@ public class VehicleService {
 
     }
 
+    @CacheInvalidateAll(cacheName = "all-vehicles")
+    @Transactional
     public Response createVehicle(CreateVehicleRequestDTO dto){
         try {
             VehicleModel vehicle = vehicleMapper.toEntity(dto);
@@ -86,7 +78,6 @@ public class VehicleService {
     }
 
     public Response findById(UUID vehicleId){
-        Log.info("BOOKING AQUI");
         VehicleModel vehicle = vehicleDAO.findById(vehicleId);
 
         if (vehicle == null)
@@ -104,6 +95,7 @@ public class VehicleService {
         return vehicle;
     }
 
+    @Transactional
     @CacheInvalidateAll(cacheName = "all-vehicles")
     public void deleteById(UUID vehicleId){
         VehicleModel vehicleToDelete = vehicleDAO.findById(vehicleId);
@@ -114,6 +106,7 @@ public class VehicleService {
         vehicleDAO.deleteById(vehicleId);
     }
 
+    @CacheResult(cacheName = "all-vehicles")
     public List<VehicleResponseDTO> getVehicleListRaw(int page, int size) {
         PanacheQuery<VehicleModel> vehicles = vehicleDAO.findAll();
         vehicles.page(Page.of(page, size));
@@ -132,6 +125,7 @@ public class VehicleService {
     }
 
     @CacheInvalidateAll(cacheName = "all-vehicles")
+    @Transactional
     public Response updateVehicle(UUID vehicleId, UpdateVehicleStatusRequestDTO dto) {
         VehicleModel vehicleModel = vehicleDAO.findById(vehicleId);
 
@@ -143,8 +137,10 @@ public class VehicleService {
             return Response.status(Response.Status.CONFLICT).build();
         }
 
-        if (dto.newStatus() == VehicleStatusEnum.UNDER_MAINTENANCE)
-            publishVehicleMaintenance(vehicleId);
+        producer.publishVehicleStatusChanged(new VehicleProducerDTO(
+                vehicleId,
+                dto.newStatus().toString()
+        ));
 
         return Response.noContent().build();
     }
@@ -157,6 +153,7 @@ public class VehicleService {
     }
 
     @Transactional
+    @CacheInvalidateAll(cacheName = "all-vehicles")
     public void createVehicleFromKafka(CreateVehicleRequestDTO dto) {
         VehicleModel vehicle = vehicleMapper.toEntity(dto);
 

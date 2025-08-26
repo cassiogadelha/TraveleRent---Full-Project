@@ -1,8 +1,6 @@
 package verso.caixa.mapper;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.dto.ResponseBookingDTO;
 import verso.caixa.model.BookingModel;
@@ -15,5 +13,5 @@ public interface BookingMapper {
 
     ResponseBookingDTO toResponseDTO(BookingModel booking);
 
-    List<ResponseBookingDTO> toResponseDTOList(List<BookingModel> vehicles);
+    List<ResponseBookingDTO> toResponseDTOList(List<BookingModel> bookings);
 }

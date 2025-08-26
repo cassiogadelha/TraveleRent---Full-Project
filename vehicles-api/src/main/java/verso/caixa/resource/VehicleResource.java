@@ -30,7 +30,6 @@ public class VehicleResource {
     }
 
     @POST
-    @Transactional
     @RolesAllowed({"realm-admin"})
     public Response createVehicle(@Valid CreateVehicleRequestDTO dto, @Context SecurityContext ctx){
         System.out.println(ctx.getUserPrincipal().getName());
@@ -53,13 +52,11 @@ public class VehicleResource {
     @GET
     @Path("{vehicleId}")
     public Response findById(@PathParam("vehicleId") UUID vehicleId){
-        Log.info("BOOKING AQUI");
         return vehicleService.findById(vehicleId);
     }
 
     @PATCH
     @Path("{id}")
-    @Transactional
     @RolesAllowed({"realm-admin"})
     public Response updateVehiclePartially(@PathParam("id") UUID vehicleId, UpdateVehicleStatusRequestDTO dto){
         return vehicleService.updateVehicle(vehicleId, dto);
@@ -67,7 +64,6 @@ public class VehicleResource {
 
     @DELETE
     @Path("{id}")
-    @Transactional
     @RolesAllowed({"realm-admin"})
     public Response deleteById(@PathParam("id") UUID vehicleId){
         vehicleService.deleteById(vehicleId);

@@ -33,7 +33,6 @@ public class BookingResource {
     }
 
     @POST
-    @Transactional
     public Response createBooking(@Valid CreateBookingRequestDTO dto){
 
         DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) securityIdentity.getPrincipal();
@@ -69,7 +68,6 @@ public class BookingResource {
 
     @PATCH
     @Path("{id}")
-    @Transactional
     @RolesAllowed("realm-employee")
     public Response checkingBooking(@PathParam("id") UUID vehicleId, UpdateBookingStatusRequest dto){
         return bookingService.checkBooking(vehicleId, dto);

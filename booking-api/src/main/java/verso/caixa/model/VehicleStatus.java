@@ -16,12 +16,12 @@ import java.util.UUID;
 public class VehicleStatus {
 
     @Id
-    UUID vehicleId;
+    UUID id;
 
-    String vehicleStatus;
+    String status;
 
-    public VehicleStatus(UUID vehicleId, String vehicleStatus) {
-        this.vehicleId = vehicleId;
-        this.vehicleStatus = vehicleStatus;
+    public VehicleStatus(UUID id, String status) {
+        this.id = id;
+        this.status = status;
     }
 }

@@ -1,5 +1,6 @@
 package verso.caixa.kafka;
 
+import io.quarkus.logging.Log;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import verso.caixa.service.BookingService;
 import verso.caixa.service.VehicleStatusService;
@@ -16,9 +17,10 @@ public class Consumer {
         this.vehicleStatusService = vehicleStatusService;
     }
 
-    @Incoming("vehicle-maintenance")
-    public void onVehicleMaintenance(UUID vehicleId) {
-        bookingService.checkVehicle(vehicleId);
+    @Incoming("vehicle-status-changed")
+    public void onVehicleStatusChanged(VehicleProducerDTO dto) {
+        Log.info("RECEIVED VEHICLE STATUS CHANGED: " + dto);
+        bookingService.checkVehicle(dto);
     }
 
     @Incoming("vehicle-created")

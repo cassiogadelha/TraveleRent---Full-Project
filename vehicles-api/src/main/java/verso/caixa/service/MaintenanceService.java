@@ -4,6 +4,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import verso.caixa.dto.CreateMaintenanceRequestDTO;
 import verso.caixa.dto.MaintenanceResponseDTO;
+import verso.caixa.enums.VehicleStatusEnum;
+import verso.caixa.kafka.Producer;
+import verso.caixa.kafka.VehicleProducerDTO;
 import verso.caixa.mapper.MaintenanceMapper;
 import verso.caixa.model.MaintenanceModel;
 import verso.caixa.model.VehicleModel;
@@ -19,11 +22,13 @@ public class MaintenanceService {
     private final MaintenanceMapper maintenanceMapper;
     private final MaintenanceDAO maintenanceDAO;
     private final VehicleService vehicleService;
+    private final Producer producer;
 
-    public MaintenanceService(MaintenanceMapper maintenanceMapper, MaintenanceDAO maintenanceDAO, VehicleService vehicleService){
+    public MaintenanceService(MaintenanceMapper maintenanceMapper, MaintenanceDAO maintenanceDAO, VehicleService vehicleService, Producer producer){
         this.maintenanceMapper = maintenanceMapper;
         this.maintenanceDAO = maintenanceDAO;
         this.vehicleService = vehicleService;
+        this.producer = producer;
     }
 
     public Response addMaintenance(UUID vehicleId, CreateMaintenanceRequestDTO dto) {
@@ -34,6 +39,11 @@ public class MaintenanceService {
         vehicle.moveForMaintenance(maintenance);
 
         maintenanceDAO.persist(maintenance);
+
+        producer.publishVehicleStatusChanged(new VehicleProducerDTO(
+                vehicleId,
+                VehicleStatusEnum.UNDER_MAINTENANCE.toString()
+        ));
 
         return Response.created(URI.create("/api/v1/vehicles/%s/maintenances/%s".formatted(
                 vehicleId, maintenance.getMaintenanceId()

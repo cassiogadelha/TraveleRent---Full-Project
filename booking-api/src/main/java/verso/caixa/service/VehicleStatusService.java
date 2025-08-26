@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
+import org.jetbrains.annotations.Debug;
 import verso.caixa.kafka.VehicleProducerDTO;
 import verso.caixa.model.BookingModel;
 import verso.caixa.model.VehicleStatus;
@@ -13,6 +14,7 @@ import verso.caixa.repository.VehicleStatusDAO;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @ApplicationScoped
 @Getter
@@ -45,5 +47,16 @@ public class VehicleStatusService {
         }
 
         return Response.ok(vehicleStatusList).build();
+    }
+
+    @Transactional
+    public void changeVehicleStatus(VehicleProducerDTO dto) {
+
+        VehicleStatus vehicleStatus = vehicleStatusDAO.findById(dto.vehicleId());
+        Log.info("VEHICLE TO CHANGE: " + dto.vehicleId());
+
+        if (vehicleStatus != null) {
+            vehicleStatus.setStatus(dto.vehicleStatus());
+        }
     }
 }

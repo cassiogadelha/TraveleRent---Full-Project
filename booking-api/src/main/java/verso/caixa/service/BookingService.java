@@ -1,7 +1,10 @@
 package verso.caixa.service;
 
 import io.quarkus.cache.CacheInvalidate;
+import io.quarkus.cache.CacheInvalidateAll;
+import io.quarkus.cache.CacheKey;
 import io.quarkus.cache.CacheResult;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -23,6 +26,7 @@ import verso.caixa.enums.ErrorCode;
 import verso.caixa.exception.BookingNotFoundException;
 import verso.caixa.exception.IllegalEndDateException;
 import verso.caixa.exception.VehicleException;
+import verso.caixa.kafka.VehicleProducerDTO;
 import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
 import verso.caixa.model.VehicleStatus;
@@ -43,6 +47,8 @@ public class BookingService {
     BookingDAO bookingDAO;
     SecurityIdentity securityIdentity;
     SmsService smsService;
+    VehicleStatusDAO vehicleStatusDAO;
+    VehicleStatusService vehicleStatusService;
 
     @RestClient
     private final VehicleAPIClient vehicleAPIClient;
@@ -67,33 +73,33 @@ public class BookingService {
                           BookingDAO bookingDAO,
                           @RestClient VehicleAPIClient vehicleAPIClient,
                           SecurityIdentity securityIdentity,
-                          SmsService smsService) {
+                          SmsService smsService,
+                          VehicleStatusDAO vehicleStatusDAO,
+                          VehicleStatusService vehicleStatusService) {
         this.securityIdentity = securityIdentity;
         this.bookingMapper = bookingMapper;
         this.bookingDAO = bookingDAO;
         this.vehicleAPIClient = vehicleAPIClient;
         this.smsService = smsService;
+        this.vehicleStatusDAO = vehicleStatusDAO;
+        this.vehicleStatusService = vehicleStatusService;
     }
 
     @Transactional
-    @CacheInvalidate(cacheName = "all-bookings")
+    @CacheInvalidateAll(cacheName = "all-bookings")
     public Response createBooking(@NotNull CreateBookingRequestDTO dto, UUID customerId, String customerName) {
-
-        Log.info("ENTERED SERVICE: ");
 
         if (dto.endDate().isBefore(dto.startDate()))
             throw new IllegalEndDateException("A data de término não pode ser anterior a de início", ErrorCode.INVALID_END_DATE);
 
-        Log.info("BEFORE API VEHICLE: ");
-        VehicleAPIClient.Vehicle vehicle = vehicleAPIClient.findVehicleById(dto.vehicleId());
-        Log.info("AFTER API VECHILE: ");
+        //VehicleAPIClient.Vehicle vehicle = vehicleAPIClient.findVehicleById(dto.vehicleId());
+        VehicleStatus vehicleStatus = vehicleStatusDAO.findById(dto.vehicleId());
 
-        if (vehicle == null) {
+        if (vehicleStatus == null) {
             throw new VehicleException("O veículo não existe!", ErrorCode.NULL_VEHICLE);
         }
 
-        Log.info("VEHICLE STATUS: " + vehicle.status());
-        if (vehicle.status().equals("UNDER_MAINTENANCE")) {
+        if (vehicleStatus.getStatus().equals("UNDER_MAINTENANCE")) {
             throw new VehicleException("O veículo está em manutenção, portanto, indisponível para aluguel!.", ErrorCode.UNAVAILABLE_VEHICLE);
         }
 
@@ -111,18 +117,19 @@ public class BookingService {
     }
 
     @CacheResult(cacheName = "all-bookings")
+    public List<ResponseBookingDTO> getBookingRawList(@CacheKey UUID customerId, @CacheKey int page, @CacheKey int size, @CacheKey boolean isAdmin) {
+
+        List<BookingModel> bookings = isAdmin
+                ? bookingDAO.findAll().page(Page.of(page, size)).list()
+                : bookingDAO.findByCustomerId(customerId, page, size);
+
+        return bookingMapper.toResponseDTOList(bookings);
+    }
+
     public Response getAllBookings(UUID customerId, int page, int size, boolean isAdmin) {
-        List<BookingModel> bookings;
+        List<ResponseBookingDTO> bookingListRaw = getBookingRawList(customerId, page, size, isAdmin);
 
-        if (isAdmin) {
-            bookings = bookingDAO.findAll()
-                    .page(Page.of(page, size))
-                    .list();
-        } else {
-            bookings = bookingDAO.findByCustomerId(customerId, page, size);
-        }
-
-        if (bookings.isEmpty()) {
+        if (bookingListRaw.isEmpty()) {
             String message = isAdmin
                     ? "A lista de agendamentos está vazia."
                     : "Você não possui nenhum agendamento ainda.";
@@ -131,7 +138,7 @@ public class BookingService {
             return Response.ok(response).build();
         }
 
-        return Response.ok(bookingMapper.toResponseDTOList(bookings)).build();
+        return Response.ok(bookingListRaw).build();
     }
 
     public Response findById(UUID bookingId) {
@@ -146,7 +153,8 @@ public class BookingService {
         return Response.ok(dto).build();
     }
 
-    @CacheInvalidate(cacheName = "all-bookings")
+    @CacheInvalidateAll(cacheName = "all-bookings")
+    @Transactional
     public Response checkBooking(UUID bookingId, UpdateBookingStatusRequest dto) {
         BookingModel bookingModel = bookingDAO.findById(bookingId);
 
@@ -176,15 +184,24 @@ public class BookingService {
     }
 
     @Transactional
-    public void checkVehicle(UUID vehicleId) {
+    @CacheInvalidateAll(cacheName = "all-bookings")
+    public void checkVehicle(VehicleProducerDTO dto) {
+
+        UUID vehicleId = dto.vehicleId();
+
+        VehicleStatus vehicleStatus = vehicleStatusDAO.findById(vehicleId);
+
+        if (vehicleStatus != null) {
+            vehicleStatusService.changeVehicleStatus(dto);
+        }
 
         BookingModel possibleBooking = bookingDAO.findByVehicleId(vehicleId);
 
-        if (possibleBooking != null) {
-            possibleBooking.setStatus(BookingStatusEnum.CANCELED);
-        }
+        if (possibleBooking == null) return;
 
-        System.out.println("RESERVA CANCELADA!!! VEÍCULO ENTROU EM MANUTENÇÃO");
+        possibleBooking.setStatus(BookingStatusEnum.CANCELED);
+
+        Log.info("RESERVA CANCELADA!!! VEÍCULO ENTROU EM MANUTENÇÃO");
         smsService.sendCancellationNotice("+5574999254283");
     }
 }
