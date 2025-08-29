@@ -25,6 +25,7 @@ public class IntegrationVehicleAPITest {
     @InjectMock
     VehicleAPIClient vehicleAPIClient;
 
+    /*
     @Test
     public void shouldReturnNotFoundFromVehicleAPI() {
         UUID id = UUID.randomUUID();
@@ -56,4 +57,5 @@ public class IntegrationVehicleAPITest {
                 .body("errorCode", is("VEHICLE-001"));
     }
 
+     */
 }

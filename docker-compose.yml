@@ -15,3 +15,31 @@ services:
       --hostname-strict=false
     volumes:
       - ./keycloak-import/travelerent-realm.json:/opt/keycloak/data/import/travelerent-realm.json
+
+  vehicles-db:
+    image: postgres:15
+    container_name: vehicles-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: vehicles
+      POSTGRES_USER: quarkus
+      POSTGRES_PASSWORD: quarkus
+    volumes:
+      - vehicles-data:/var/lib/postgresql/data
+
+  bookings-db:
+    image: postgres:15
+    container_name: bookings-db
+    ports:
+      - "5440:5432"
+    environment:
+      POSTGRES_DB: bookings
+      POSTGRES_USER: quarkus
+      POSTGRES_PASSWORD: quarkus
+    volumes:
+      - bookings-data:/var/lib/postgresql/data
+
+volumes:
+  vehicles-data:
+  bookings-data:

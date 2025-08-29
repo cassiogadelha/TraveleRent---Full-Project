@@ -50,8 +50,8 @@ public class BookingService {
     VehicleStatusDAO vehicleStatusDAO;
     VehicleStatusService vehicleStatusService;
 
-    @RestClient
-    private final VehicleAPIClient vehicleAPIClient;
+    /*@RestClient
+    private final VehicleAPIClient vehicleAPIClient;*/
 
     @Inject
     @Channel("booking-in")
@@ -65,13 +65,9 @@ public class BookingService {
     @Channel("booking-cancel")
     Emitter<BookingModel> canceledEmitter;
 
-    record Vehicle(String status) {
-    }
-
-
     public BookingService(BookingMapper bookingMapper,
                           BookingDAO bookingDAO,
-                          @RestClient VehicleAPIClient vehicleAPIClient,
+                          //@RestClient VehicleAPIClient vehicleAPIClient,
                           SecurityIdentity securityIdentity,
                           SmsService smsService,
                           VehicleStatusDAO vehicleStatusDAO,
@@ -79,7 +75,7 @@ public class BookingService {
         this.securityIdentity = securityIdentity;
         this.bookingMapper = bookingMapper;
         this.bookingDAO = bookingDAO;
-        this.vehicleAPIClient = vehicleAPIClient;
+        //this.vehicleAPIClient = vehicleAPIClient;
         this.smsService = smsService;
         this.vehicleStatusDAO = vehicleStatusDAO;
         this.vehicleStatusService = vehicleStatusService;
@@ -93,6 +89,8 @@ public class BookingService {
             throw new IllegalEndDateException("A data de término não pode ser anterior a de início", ErrorCode.INVALID_END_DATE);
 
         //VehicleAPIClient.Vehicle vehicle = vehicleAPIClient.findVehicleById(dto.vehicleId());
+        //atualmente, VehicleAPIClient não está sendo usado para criar booking
+
         VehicleStatus vehicleStatus = vehicleStatusDAO.findById(dto.vehicleId());
 
         if (vehicleStatus == null) {

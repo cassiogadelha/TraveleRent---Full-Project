@@ -18,8 +18,8 @@
         </processorPath>
         <module name="code-with-quarkus" />
         <module name="code-with-quarkus (1)" />
-        <module name="code-with-quarkus (2)" />
         <module name="booking-api" />
+        <module name="code-with-quarkus (2)" />
       </profile>
     </annotationProcessing>
   </component>

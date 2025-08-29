@@ -17,6 +17,7 @@ import verso.caixa.helpers.BookingTestHelper;
 import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
 import verso.caixa.repository.BookingDAO;
+import verso.caixa.repository.VehicleStatusDAO;
 import verso.caixa.twilio.SmsService;
 
 import java.time.LocalDate;
@@ -35,6 +36,8 @@ public class UnityTests {
     VehicleAPIClient vehicleAPIClient;
     SecurityIdentity securityIdentity;
     SmsService smsService;
+    VehicleStatusDAO vehicleStatusDAO;
+    VehicleStatusService vehicleStatusService;
 
     BookingService bookingService;
 
@@ -42,11 +45,12 @@ public class UnityTests {
     void setup() {
         bookingMapper = mock(BookingMapper.class);
         bookingDAO = mock(BookingDAO.class);
-        vehicleAPIClient = mock(VehicleAPIClient.class);
         securityIdentity = mock(SecurityIdentity.class);
         smsService = mock(SmsService.class);
+        vehicleStatusDAO = mock(VehicleStatusDAO.class);
+        vehicleStatusService = mock(VehicleStatusService.class);
 
-        bookingService = new BookingService(bookingMapper, bookingDAO, vehicleAPIClient, securityIdentity, smsService);
+        bookingService = new BookingService(bookingMapper, bookingDAO, securityIdentity, smsService, vehicleStatusDAO, vehicleStatusService);
     }
 
 
