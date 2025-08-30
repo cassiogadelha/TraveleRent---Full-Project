@@ -36,20 +36,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class UnityTests {
-    //@InjectMock
-    //BookingEmitterWrapper emitterWrapper;
-
-   // @InjectMock
-    //BookingDAO bookingDAO;
-
-    //@InjectMock
-    //VehicleStatusDAO vehicleStatusDAO;
-
-   // @InjectMock
-    //BookingMapper bookingMapper;
-
-    //@Inject BookingService bookingService;
-
     BookingMapper bookingMapper;
     BookingDAO bookingDAO;
     VehicleAPIClient vehicleAPIClient;
@@ -90,7 +76,7 @@ public class UnityTests {
 
     @Test
     void shouldThrowVehicleExceptionWhenVehicleIsNull() {
-        when(vehicleAPIClient.findVehicleById(any())).thenReturn(null);
+        when(vehicleStatusDAO.findById(any())).thenReturn(null);
 
         CreateBookingRequestDTO dto = BookingTestHelper.buildValidBookingDTO();
 
@@ -101,8 +87,8 @@ public class UnityTests {
 
     @Test
     void shouldThrowVehicleExceptionWhenVehicleIsUnavailable() {
-        VehicleAPIClient.Vehicle mockVehicle = new VehicleAPIClient.Vehicle("RENTED");
-        when(vehicleAPIClient.findVehicleById(any())).thenReturn(mockVehicle);
+        VehicleStatus vehicleStatus = new VehicleStatus(UUID.randomUUID(), "UNDER_MAINTENANCE");
+        when(vehicleStatusDAO.findById(any())).thenReturn(vehicleStatus);
 
         CreateBookingRequestDTO dto = BookingTestHelper.buildValidBookingDTO();
 
@@ -135,14 +121,15 @@ public class UnityTests {
     void shouldReturn404WhenBookingNotFoundOnUpdate() {
         when(bookingDAO.findById(any())).thenReturn(null);
 
-        Response response = bookingService.checkBooking(UUID.randomUUID(), new UpdateBookingStatusRequest(BookingStatusEnum.FINISHED));
-
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertThrows(BookingNotFoundException.class, () -> {
+            bookingService.checkBooking(UUID.randomUUID(), new UpdateBookingStatusRequest(BookingStatusEnum.FINISHED));
+        });
     }
 
     @Test
     void shouldReturnConflictWhenInvalidStatusChange() {
         BookingModel model = mock(BookingModel.class);
+
         doThrow(new IllegalBookingStatus("Inválido", ErrorCode.INVALID_STATUS))
                 .when(model).setStatus(any());
 
@@ -195,7 +182,7 @@ public class UnityTests {
         Response response = bookingService.getAllBookings(UUID.randomUUID(), 0, 10, false);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertTrue(response.getEntity().toString().contains("lista de agendamentos está vazia"));
+        assertTrue(response.getEntity().toString().contains("Você não possui nenhum agendamento ainda."));
     }
 
     @Test
