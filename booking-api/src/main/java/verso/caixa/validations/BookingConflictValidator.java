@@ -1,7 +1,6 @@
 package verso.caixa.validations;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import verso.caixa.dto.CreateBookingRequestDTO;

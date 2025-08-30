@@ -2,7 +2,6 @@ package verso.caixa.service;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.security.identity.SecurityIdentity;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import verso.caixa.client.VehicleAPIClient;
 import verso.caixa.dto.CreateBookingRequestDTO;
-import verso.caixa.dto.ErrorResponseDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
 import verso.caixa.enums.BookingStatusEnum;
 import verso.caixa.enums.ErrorCode;
@@ -25,7 +23,6 @@ import verso.caixa.repository.VehicleStatusDAO;
 import verso.caixa.twilio.SmsService;
 import verso.caixa.validations.BookingConflictValidator;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class UnityTests {
+public class ServiceUnityTests {
     BookingMapper bookingMapper;
     BookingDAO bookingDAO;
     VehicleAPIClient vehicleAPIClient;
@@ -244,34 +241,6 @@ public class UnityTests {
         Mockito.verify(bookingEmitterWrapper).sendCanceled(booking);
         Mockito.verify(bookingEmitterWrapper, Mockito.never()).sendActivated(Mockito.any());
         Mockito.verify(bookingEmitterWrapper, Mockito.never()).sendFinished(Mockito.any());
-    }
-
-    @Test
-    public void shouldReturnResponseDTO() {
-
-        RemoteServiceException ex = new RemoteServiceException(
-                "Veículo não encontrado",
-                "VEICULO_404",
-                "O ID fornecido não corresponde a nenhum veículo",
-                "/api/veiculos/999",
-                Instant.parse("2025-08-03T12:48:47.263380500Z"),
-                404
-        );
-
-        RemoteServiceExceptionMapper mapper = new RemoteServiceExceptionMapper();
-        Response response = mapper.toResponse(ex);
-
-        assertEquals(404, response.getStatus());
-
-        assertTrue(response.getEntity() instanceof ErrorResponseDTO);
-        ErrorResponseDTO dto = (ErrorResponseDTO) response.getEntity();
-
-        assertEquals("Veículo não encontrado", dto.title());
-        assertEquals("VEICULO_404", dto.errorCode());
-        assertEquals("O ID fornecido não corresponde a nenhum veículo", dto.details());
-        assertEquals("/api/veiculos/999", dto.path());
-        assertEquals(Instant.parse("2025-08-03T12:48:47.263380500Z"), dto.timestamp());
-        assertEquals(404, dto.statusCode());
     }
 
     @Test

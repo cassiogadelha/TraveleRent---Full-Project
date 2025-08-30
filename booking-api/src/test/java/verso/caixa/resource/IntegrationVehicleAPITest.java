@@ -2,20 +2,12 @@ package verso.caixa.resource;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.junit.jupiter.api.Test;
 import verso.caixa.client.VehicleAPIClient;
-import verso.caixa.dto.CreateBookingRequestDTO;
-import verso.caixa.exception.RemoteServiceException;
-import verso.caixa.helpers.BookingTestHelper;
-
-import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.when;
 
 
 @QuarkusTest

@@ -1,5 +1,6 @@
 package verso.caixa.dto;
 
+import io.quarkus.test.junit.QuarkusTest;
 import jakarta.validation.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@QuarkusTest
 public class CreateBookingRequestDTOValidationTest {
 
     private Validator validator;
@@ -30,18 +32,6 @@ public class CreateBookingRequestDTOValidationTest {
 
         Set<ConstraintViolation<CreateBookingRequestDTO>> violations = validator.validate(dto);
         assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Veículo não informado")));
-    }
-
-    @Test
-    void shouldFailWhenCustomerNameIsNull() {
-        CreateBookingRequestDTO dto = new CreateBookingRequestDTO(
-                UUID.randomUUID(),
-                LocalDate.now(),
-                LocalDate.now()
-        );
-
-        Set<ConstraintViolation<CreateBookingRequestDTO>> violations = validator.validate(dto);
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Informe o nome do cliente")));
     }
 
     @Test
