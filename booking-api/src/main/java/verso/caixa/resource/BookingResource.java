@@ -37,7 +37,7 @@ public class BookingResource {
 
         DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) securityIdentity.getPrincipal();
         UUID customerId = UUID.fromString(principal.getSubject());
-        String customerName = principal.getName();
+        String customerName = principal.getClaim("name");
 
         return bookingService.createBooking(dto, customerId, customerName);
     }

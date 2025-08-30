@@ -31,7 +31,6 @@ public class VehicleStatusService {
         VehicleStatus vehicleStatus = new VehicleStatus(dto.vehicleId(), dto.vehicleStatus());
 
         vehicleStatusDAO.persist(vehicleStatus);
-        Log.info("UM VEICULO FOI CRIADO!!! " + vehicleStatus);
     }
 
     public Response getVehicleStatus(int page, int size) {

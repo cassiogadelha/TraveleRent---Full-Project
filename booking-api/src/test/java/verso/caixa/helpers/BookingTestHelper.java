@@ -8,6 +8,8 @@ import verso.caixa.model.BookingModel;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import static io.restassured.RestAssured.given;
+
 public class BookingTestHelper {
 
     public static BookingModel buildValidBooking() {
@@ -32,8 +34,8 @@ public class BookingTestHelper {
         return new BookingModel(UUID.randomUUID(), start, end, customerId, vehicleId);
     }
 
-    public static CreateBookingRequestDTO buildCustomBookingDTO( LocalDate start, LocalDate end) {
-        return new CreateBookingRequestDTO(UUID.randomUUID(), start, end);
+    public static CreateBookingRequestDTO buildCustomBookingDTO(UUID vehicleId, LocalDate start, LocalDate end) {
+        return new CreateBookingRequestDTO(vehicleId, start, end);
     }
 
     public static ResponseBookingDTO buildValidResponseBookingDTO(){
@@ -48,6 +50,74 @@ public class BookingTestHelper {
                 null,
                 null);
 
+    }
+
+    public static String getAdminAccessToken() {
+        return given()
+                .relaxedHTTPSValidation()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("client_id", "bookings-backend-service")
+                .formParam("username", "admin")
+                .formParam("password", "admin")
+                .formParam("grant_type", "password")
+                .formParam("client_secret", "cuv0nz1enzpp8aTLruUOLthU6NEyU0vs")
+                .when()
+                .post("http://localhost:8888/realms/travelerent/protocol/openid-connect/token")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("access_token");
+    }
+
+    public static String getAnaAccessToken() {
+        return given()
+                .relaxedHTTPSValidation()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("client_id", "bookings-backend-service")
+                .formParam("username", "anasouza0")
+                .formParam("password", "ana0")
+                .formParam("grant_type", "password")
+                .formParam("client_secret", "cuv0nz1enzpp8aTLruUOLthU6NEyU0vs")
+                .when()
+                .post("http://localhost:8888/realms/travelerent/protocol/openid-connect/token")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("access_token");
+    }
+
+    public static String getCarlosAccessToken() {
+        return given()
+                .relaxedHTTPSValidation()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("client_id", "bookings-backend-service")
+                .formParam("username", "carlosandrade")
+                .formParam("password", "carlos0")
+                .formParam("grant_type", "password")
+                .formParam("client_secret", "cuv0nz1enzpp8aTLruUOLthU6NEyU0vs")
+                .when()
+                .post("http://localhost:8888/realms/travelerent/protocol/openid-connect/token")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("access_token");
+    }
+
+    public static String getEmployeeAccessToken() {
+        return given()
+                .relaxedHTTPSValidation()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("client_id", "bookings-backend-service")
+                .formParam("username", "employee")
+                .formParam("password", "employee0")
+                .formParam("grant_type", "password")
+                .formParam("client_secret", "cuv0nz1enzpp8aTLruUOLthU6NEyU0vs")
+                .when()
+                .post("http://localhost:8888/realms/travelerent/protocol/openid-connect/token")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("access_token");
     }
 }
 

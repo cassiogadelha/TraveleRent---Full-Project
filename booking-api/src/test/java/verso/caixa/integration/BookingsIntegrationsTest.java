@@ -1,14 +1,17 @@
 package verso.caixa.integration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import verso.caixa.client.WireMockVehicleAPI;
+import io.restassured.response.Response;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.*;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.helpers.BookingTestHelper;
+import verso.caixa.model.VehicleStatus;
+import verso.caixa.repository.VehicleStatusDAO;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -16,32 +19,267 @@ import java.util.UUID;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-import static io.restassured.RestAssured.*;
-
 
 @QuarkusTest
-@QuarkusTestResource(WireMockVehicleAPI.class)
+//@QuarkusTestResource(WireMockVehicleAPI.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BookingsIntegrationsTest {
 
-    private String getAdminAccessToken() {
-        return given()
-                .relaxedHTTPSValidation()
-                .contentType("application/x-www-form-urlencoded")
-                .formParam("client_id", "bookings-backend-service")
-                .formParam("username", "admin")
-                .formParam("password", "admin")
-                .formParam("grant_type", "password")
-                .formParam("client_secret", "cuv0nz1enzpp8aTLruUOLthU6NEyU0vs")
-                .when()
-                .post("http://localhost:8888/realms/travelerent/protocol/openid-connect/token")
-                .then()
-                .statusCode(200)
-                .extract()
-                .path("access_token");
+    VehicleStatus vehicleStatusTest;
+    UUID createdBookingId;
+
+    @Inject
+    VehicleStatusDAO vehicleStatusDAO;
+
+    @BeforeEach
+    @Transactional
+    void setupVehicleStatus() {
+        vehicleStatusTest = new VehicleStatus(UUID.randomUUID(), "AVAILABLE");
+        vehicleStatusDAO.persist(vehicleStatusTest);
+    }
+
+    @Test
+    @Order(1)
+    void shouldReturnEmptyListMessageAsAdmin() {
+        String token = BookingTestHelper.getAdminAccessToken();
+
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .queryParam("page", 0)
+            .queryParam("size", 10)
+            .when()
+            .get("/api/v1/bookings")
+            .then()
+            .statusCode(200)
+            .body("mensagem", equalTo("A lista de agendamentos está vazia."));
+    }
+
+    @Test
+    @Order(2)
+    void shouldReturnEmptyListMessageAsCostumer() {
+        String token = BookingTestHelper.getAnaAccessToken();
+
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .queryParam("page", 0)
+            .queryParam("size", 10)
+            .when()
+            .get("/api/v1/bookings/my")
+            .then()
+            .statusCode(200)
+            .body("mensagem", equalTo("Você não possui nenhum agendamento ainda."));
+    }
+
+    @Test
+    @Order(3)
+    void shouldCreateBookingSuccessfully() {
+        String token = BookingTestHelper.getAnaAccessToken();
+
+        CreateBookingRequestDTO dto = BookingTestHelper.buildCustomBookingDTO(
+            vehicleStatusTest.getId(),
+            LocalDate.now(),
+            LocalDate.now().plusDays(5)
+        );
+
+        Response response = given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(dto)
+            .when()
+            .post("/api/v1/bookings");
+
+        response
+            .then()
+            .statusCode(201)
+            .body("customerName", equalTo("Ana Souza"))
+            .body("startDate", equalTo(dto.startDate().toString()))
+            .body("endDate", equalTo(dto.endDate().toString()));
+
+        String locationHeader = response.getHeader("Location");
+        createdBookingId = UUID.fromString(locationHeader.substring(locationHeader.lastIndexOf("/") + 1));
+    }
+
+    @Test
+    @Order(4)
+    void shouldReturnAllBookingsAsAdmin() {
+        String token = BookingTestHelper.getAdminAccessToken();
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .queryParam("page", 0)
+            .queryParam("size", 10)
+            .when()
+            .get("/api/v1/bookings")
+            .then()
+            .statusCode(200)
+            .body("$", not(empty()))
+            .body("[0].customerName", equalTo("Ana Souza"));
+    }
+
+    @Test
+    @Order(5)
+    void shouldReturnBadRequestForBookingWithInvalidStartDate() throws JsonProcessingException {
+
+        CreateBookingRequestDTO dto = BookingTestHelper.buildCustomBookingDTO(
+            UUID.randomUUID(),
+            LocalDate.now().minusDays(2),
+            LocalDate.now().plusDays(3));
+
+        given()
+            .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + BookingTestHelper.getAdminAccessToken()) // simula token válido
+            .body(dto)
+            .when()
+            .post("/api/v1/bookings")
+            .then()
+            .statusCode(400)
+            .body("violations", not(empty()))
+            .body("violations.message", hasItem("A data de início não pode ser anterior a hoje."));
+    }
+
+    @Test
+    @Order(6)
+    void shouldGetBookingById() {
+        String token = BookingTestHelper.getAdminAccessToken();
+
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .queryParam("page", 0)
+            .queryParam("size", 10)
+            .when()
+            .get("/api/v1/bookings/" + createdBookingId)
+            .then()
+            .log().body()
+            .statusCode(200)
+            .body("entity.customerName", equalTo("Ana Souza"));
     }
 
 
-   /*
+    @Test
+    @Order(7)
+    void customerShouldOnlySeeOwnBookings() {
+
+        String carlosToken = BookingTestHelper.getCarlosAccessToken();
+
+        given()
+            .header("Authorization", "Bearer " + carlosToken)
+            .contentType(ContentType.JSON)
+            .queryParam("page", 0)
+            .queryParam("size", 10)
+            .when()
+            .get("/api/v1/bookings/my")
+            .then()
+            .statusCode(200)
+            .body("mensagem", equalTo("Você não possui nenhum agendamento ainda."));
+
+        String anaToken = BookingTestHelper.getAnaAccessToken();
+
+        given()
+            .header("Authorization", "Bearer " + anaToken)
+            .contentType(ContentType.JSON)
+            .queryParam("page", 0)
+            .queryParam("size", 10)
+            .when()
+            .get("/api/v1/bookings/my")
+            .then()
+            .statusCode(200)
+            .body("$", not(empty()))
+            .body("[0].customerName", equalTo("Ana Souza"));
+    }
+
+    @Test
+    @Order(8)
+    void shouldReturnAllVehiclesStatus() {
+        String token = BookingTestHelper.getAdminAccessToken();
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .queryParam("page", 0)
+            .queryParam("size", 10)
+            .when()
+            .get("/api/v1/bookings/vehicles-status")
+            .then()
+            .statusCode(200)
+            .body("$", not(empty()));
+    }
+
+    @Test
+    @Order(9)
+    void shouldUpdateStatusFromCreatedToActivated() {
+        String employeeToken = BookingTestHelper.getEmployeeAccessToken();
+
+        given()
+            .header("Authorization", "Bearer " + employeeToken)
+            .contentType(ContentType.JSON)
+            .body("{\"newStatus\": \"ACTIVATED\"}")
+            .when()
+            .patch("/api/v1/bookings/" + createdBookingId)
+            .then()
+            .statusCode(204);
+    }
+
+    @Test
+    @Order(10)
+    void shouldUpdateStatusFromActivatedToFinished() {
+        String employeeToken = BookingTestHelper.getEmployeeAccessToken();
+
+        given()
+            .header("Authorization", "Bearer " + employeeToken)
+            .contentType(ContentType.JSON)
+            .body("{\"newStatus\": \"FINISHED\"}")
+            .when()
+            .patch("/api/v1/bookings/" + createdBookingId)
+            .then()
+            .statusCode(204);
+    }
+
+    @Test
+    @Order(11)
+    void shouldUpdateStatusFromCreatedToCanceled() {
+        String employeeToken = BookingTestHelper.getEmployeeAccessToken();
+        String anaToken = BookingTestHelper.getAnaAccessToken();
+
+        CreateBookingRequestDTO dto = BookingTestHelper.buildCustomBookingDTO(
+            vehicleStatusTest.getId(),
+            LocalDate.now().plusDays(2),
+            LocalDate.now().plusDays(4)
+        );
+
+        Response response = given()
+            .header("Authorization", "Bearer " + anaToken)
+            .contentType(ContentType.JSON)
+            .body(dto)
+            .when()
+            .post("/api/v1/bookings");
+
+        Log.info(response.getHeader("Location"));
+        UUID bookingId = UUID.fromString(response.getHeader("Location").split("/")[6]);
+
+        given()
+            .header("Authorization", "Bearer " + employeeToken)
+            .contentType(ContentType.JSON)
+            .body("{\"newStatus\": \"CANCELED\"}")
+            .when()
+            .patch("/api/v1/bookings/" + bookingId)
+            .then()
+            .statusCode(204);
+
+        given()
+            .header("Authorization", "Bearer " + BookingTestHelper.getAdminAccessToken())
+            .contentType(ContentType.JSON)
+            .when()
+            .get("/api/v1/bookings/" + bookingId)
+            .then()
+            .statusCode(200)
+            .body("entity.status", equalTo("CANCELED"));
+
+    }
+
+    /*
     @Test
     public void shouldCreateBookingSuccesfully() {
         UUID vehicleId = UUID.randomUUID();
@@ -71,22 +309,4 @@ public class BookingsIntegrationsTest {
 
     */
 
-    @Test
-    void shouldReturnBadRequestForBookingWithInvalidStartDate() throws JsonProcessingException {
-
-        CreateBookingRequestDTO dto = BookingTestHelper.buildCustomBookingDTO(
-                LocalDate.now().minusDays(2),
-                LocalDate.now().plusDays(3));
-
-        given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + getAdminAccessToken()) // simula token válido
-                .body(dto)
-                .when()
-                .post("/api/v1/bookings")
-                .then()
-                .statusCode(400)
-                .body("violations", not(empty()))
-                .body("violations.message", hasItem("A data de início não pode ser anterior a hoje."));
-    }
 }

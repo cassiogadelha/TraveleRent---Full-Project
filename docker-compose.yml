@@ -22,7 +22,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: vehicles
+      POSTGRES_DB: vehicles_api
       POSTGRES_USER: quarkus
       POSTGRES_PASSWORD: quarkus
     volumes:
@@ -34,7 +34,7 @@ services:
     ports:
       - "5440:5432"
     environment:
-      POSTGRES_DB: bookings
+      POSTGRES_DB: bookings_api
       POSTGRES_USER: quarkus
       POSTGRES_PASSWORD: quarkus
     volumes:

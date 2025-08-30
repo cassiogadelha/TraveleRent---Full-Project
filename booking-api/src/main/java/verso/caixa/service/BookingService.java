@@ -26,6 +26,7 @@ import verso.caixa.enums.ErrorCode;
 import verso.caixa.exception.BookingNotFoundException;
 import verso.caixa.exception.IllegalEndDateException;
 import verso.caixa.exception.VehicleException;
+import verso.caixa.kafka.BookingEmitterWrapper;
 import verso.caixa.kafka.VehicleProducerDTO;
 import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
@@ -49,29 +50,18 @@ public class BookingService {
     SmsService smsService;
     VehicleStatusDAO vehicleStatusDAO;
     VehicleStatusService vehicleStatusService;
+    BookingEmitterWrapper bookingEmitterWrapper;
 
     /*@RestClient
     private final VehicleAPIClient vehicleAPIClient;*/
-
-    @Inject
-    @Channel("booking-in")
-    Emitter<BookingModel> activatedEmitter;
-
-    @Inject
-    @Channel("booking-out")
-    Emitter<BookingModel> finishedEmitter;
-
-    @Inject
-    @Channel("booking-cancel")
-    Emitter<BookingModel> canceledEmitter;
-
     public BookingService(BookingMapper bookingMapper,
                           BookingDAO bookingDAO,
                           //@RestClient VehicleAPIClient vehicleAPIClient,
                           SecurityIdentity securityIdentity,
                           SmsService smsService,
                           VehicleStatusDAO vehicleStatusDAO,
-                          VehicleStatusService vehicleStatusService) {
+                          VehicleStatusService vehicleStatusService,
+                          BookingEmitterWrapper bookingEmitterWrapper) {
         this.securityIdentity = securityIdentity;
         this.bookingMapper = bookingMapper;
         this.bookingDAO = bookingDAO;
@@ -79,6 +69,7 @@ public class BookingService {
         this.smsService = smsService;
         this.vehicleStatusDAO = vehicleStatusDAO;
         this.vehicleStatusService = vehicleStatusService;
+        this.bookingEmitterWrapper = bookingEmitterWrapper;
     }
 
     @Transactional
@@ -165,6 +156,10 @@ public class BookingService {
 
         } catch (RuntimeException e) {
 
+            e.printStackTrace();
+
+            Log.info("ENTROU NO CATCH");
+
             return Response.status(Response.Status.CONFLICT)
                     .entity(e.getMessage())
                     .build();
@@ -175,9 +170,9 @@ public class BookingService {
 
     private void emitStatusChange(BookingModel booking) {
         switch (booking.getStatus()) {
-            case ACTIVATED -> activatedEmitter.send(booking);
-            case FINISHED -> finishedEmitter.send(booking);
-            case CANCELED -> canceledEmitter.send(booking);
+            case ACTIVATED -> bookingEmitterWrapper.sendActivated(booking);
+            case FINISHED -> bookingEmitterWrapper.sendFinished(booking);
+            case CANCELED -> bookingEmitterWrapper.sendCanceled(booking);
         }
     }
 

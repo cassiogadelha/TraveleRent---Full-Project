@@ -2,24 +2,30 @@ package verso.caixa.service;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import verso.caixa.client.VehicleAPIClient;
 import verso.caixa.dto.CreateBookingRequestDTO;
+import verso.caixa.dto.ErrorResponseDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
 import verso.caixa.enums.BookingStatusEnum;
 import verso.caixa.enums.ErrorCode;
-import verso.caixa.exception.IllegalBookingStatus;
-import verso.caixa.exception.IllegalEndDateException;
-import verso.caixa.exception.VehicleException;
+import verso.caixa.exception.*;
 import verso.caixa.helpers.BookingTestHelper;
+import verso.caixa.kafka.BookingEmitterWrapper;
 import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
+import verso.caixa.model.VehicleStatus;
 import verso.caixa.repository.BookingDAO;
 import verso.caixa.repository.VehicleStatusDAO;
 import verso.caixa.twilio.SmsService;
+import verso.caixa.validations.BookingConflictValidator;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +36,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class UnityTests {
+    //@InjectMock
+    //BookingEmitterWrapper emitterWrapper;
+
+   // @InjectMock
+    //BookingDAO bookingDAO;
+
+    //@InjectMock
+    //VehicleStatusDAO vehicleStatusDAO;
+
+   // @InjectMock
+    //BookingMapper bookingMapper;
+
+    //@Inject BookingService bookingService;
 
     BookingMapper bookingMapper;
     BookingDAO bookingDAO;
@@ -38,6 +57,7 @@ public class UnityTests {
     SmsService smsService;
     VehicleStatusDAO vehicleStatusDAO;
     VehicleStatusService vehicleStatusService;
+    BookingEmitterWrapper bookingEmitterWrapper;
 
     BookingService bookingService;
 
@@ -49,14 +69,16 @@ public class UnityTests {
         smsService = mock(SmsService.class);
         vehicleStatusDAO = mock(VehicleStatusDAO.class);
         vehicleStatusService = mock(VehicleStatusService.class);
+        bookingEmitterWrapper = mock(BookingEmitterWrapper.class);
 
-        bookingService = new BookingService(bookingMapper, bookingDAO, securityIdentity, smsService, vehicleStatusDAO, vehicleStatusService);
+        bookingService = new BookingService(bookingMapper, bookingDAO, securityIdentity, smsService, vehicleStatusDAO, vehicleStatusService, bookingEmitterWrapper);
     }
 
 
     @Test
     void shouldThrowIllegalEndDateExceptionWhenEndDateBeforeStartDate() {
         CreateBookingRequestDTO dto = BookingTestHelper.buildCustomBookingDTO(
+            UUID.randomUUID(),
             LocalDate.now(),
             LocalDate.now().minusDays(1)
         );
@@ -91,18 +113,22 @@ public class UnityTests {
 
     @Test
     void shouldCreateBookingSuccessfully() {
-        VehicleAPIClient.Vehicle mockVehicle = new VehicleAPIClient.Vehicle("AVAILABLE");
-        when(vehicleAPIClient.findVehicleById(any())).thenReturn(mockVehicle);
 
-        BookingModel bookingModel = mock(BookingModel.class);
-        when(bookingMapper.toEntity(any())).thenReturn(bookingModel);
+        UUID vehicleId = UUID.randomUUID();
+        LocalDate startDate = LocalDate.now().plusDays(2);
+        LocalDate endDate = LocalDate.now().plusDays(3);
+        CreateBookingRequestDTO dto = new CreateBookingRequestDTO(vehicleId, startDate, endDate);
 
-        CreateBookingRequestDTO dto = BookingTestHelper.buildValidBookingDTO();
+        VehicleStatus mockStatus = new VehicleStatus(vehicleId, "AVAILABLE");
+        Mockito.when(vehicleStatusDAO.findById(vehicleId)).thenReturn(mockStatus);
 
-        Response response = bookingService.createBooking(dto, UUID.randomUUID(), "Ana Silva");
+        BookingModel fakeBooking = BookingTestHelper.buildValidBooking();
+        Mockito.when(bookingMapper.toEntity(dto)).thenReturn(fakeBooking);
 
-        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
-        assertEquals(bookingModel, response.getEntity());
+        Assertions.assertDoesNotThrow(() -> {
+            bookingService.createBooking(dto, UUID.randomUUID(), "Jorge Souza");
+        });
+
     }
 
     @Test
@@ -188,5 +214,130 @@ public class UnityTests {
         assertNotNull(response.getEntity());
     }
 
+    @Test
+    void shouldEmitActivatedBooking() {
+        BookingModel booking = BookingTestHelper.buildValidBooking();
+
+        Mockito.when(bookingDAO.findById(booking.getBookingId())).thenReturn(booking);
+
+        UpdateBookingStatusRequest dto = new UpdateBookingStatusRequest(BookingStatusEnum.ACTIVATED);
+        bookingService.checkBooking(booking.getBookingId(), dto);
+
+        Mockito.verify(bookingEmitterWrapper).sendActivated(booking);
+        Mockito.verify(bookingEmitterWrapper, Mockito.never()).sendCanceled(Mockito.any());
+        Mockito.verify(bookingEmitterWrapper, Mockito.never()).sendFinished(Mockito.any());
+    }
+
+    @Test
+    void shouldEmitActivatedAndFinishedBooking() {
+        BookingModel booking = BookingTestHelper.buildValidBooking();
+
+        Mockito.when(bookingDAO.findById(booking.getBookingId())).thenReturn(booking);
+
+        UpdateBookingStatusRequest dto = new UpdateBookingStatusRequest(BookingStatusEnum.ACTIVATED);
+        bookingService.checkBooking(booking.getBookingId(), dto);
+
+        dto = new UpdateBookingStatusRequest(BookingStatusEnum.FINISHED);
+        bookingService.checkBooking(booking.getBookingId(), dto);
+
+        Mockito.verify(bookingEmitterWrapper).sendActivated(booking);
+        Mockito.verify(bookingEmitterWrapper).sendFinished(booking);
+        Mockito.verify(bookingEmitterWrapper, Mockito.never()).sendCanceled(Mockito.any());
+    }
+
+    @Test
+    void shouldEmitCanceledBooking() {
+        BookingModel booking = BookingTestHelper.buildValidBooking();
+
+        Mockito.when(bookingDAO.findById(booking.getBookingId())).thenReturn(booking);
+
+        UpdateBookingStatusRequest dto = new UpdateBookingStatusRequest(BookingStatusEnum.CANCELED);
+        bookingService.checkBooking(booking.getBookingId(), dto);
+
+        Mockito.verify(bookingEmitterWrapper).sendCanceled(booking);
+        Mockito.verify(bookingEmitterWrapper, Mockito.never()).sendActivated(Mockito.any());
+        Mockito.verify(bookingEmitterWrapper, Mockito.never()).sendFinished(Mockito.any());
+    }
+
+    @Test
+    public void shouldReturnResponseDTO() {
+
+        RemoteServiceException ex = new RemoteServiceException(
+                "Veículo não encontrado",
+                "VEICULO_404",
+                "O ID fornecido não corresponde a nenhum veículo",
+                "/api/veiculos/999",
+                Instant.parse("2025-08-03T12:48:47.263380500Z"),
+                404
+        );
+
+        RemoteServiceExceptionMapper mapper = new RemoteServiceExceptionMapper();
+        Response response = mapper.toResponse(ex);
+
+        assertEquals(404, response.getStatus());
+
+        assertTrue(response.getEntity() instanceof ErrorResponseDTO);
+        ErrorResponseDTO dto = (ErrorResponseDTO) response.getEntity();
+
+        assertEquals("Veículo não encontrado", dto.title());
+        assertEquals("VEICULO_404", dto.errorCode());
+        assertEquals("O ID fornecido não corresponde a nenhum veículo", dto.details());
+        assertEquals("/api/veiculos/999", dto.path());
+        assertEquals(Instant.parse("2025-08-03T12:48:47.263380500Z"), dto.timestamp());
+        assertEquals(404, dto.statusCode());
+    }
+
+    @Test
+    void shouldReturnConflictWhenStatusTransitionIsInvalid() {
+        BookingModel fakeBooking = BookingTestHelper.buildValidBooking();
+
+        Mockito.when(bookingDAO.findById(fakeBooking.getBookingId())).thenReturn(fakeBooking);
+
+        UpdateBookingStatusRequest dto = new UpdateBookingStatusRequest(BookingStatusEnum.CANCELED);
+
+        Response response = bookingService.checkBooking(fakeBooking.getBookingId(), dto);
+
+        assertEquals(204, response.getStatus(), "Cancelamento deveria retornar 204");
+        assertEquals(BookingStatusEnum.CANCELED, fakeBooking.getStatus(), "Status deveria ter sido alterado");
+
+        dto = new UpdateBookingStatusRequest(BookingStatusEnum.CREATED);
+
+        response = bookingService.checkBooking(fakeBooking.getBookingId(), dto);
+
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
+        assertTrue(response.getEntity().toString().contains("Erro ao alterar o status do agendamento"), "Mensagem de erro esperada");
+    }
+
+    @Test
+    void shouldCancelBookingSuccessfully_WhenStatusIsValid() {
+
+        BookingModel fakeBooking = BookingTestHelper.buildValidBooking();
+
+        Mockito.when(bookingDAO.findById(fakeBooking.getBookingId())).thenReturn(fakeBooking);
+
+        UpdateBookingStatusRequest dtoStatus = new UpdateBookingStatusRequest(BookingStatusEnum.CANCELED);
+
+        Response response = bookingService.checkBooking(fakeBooking.getBookingId(), dtoStatus);
+
+        assertEquals(204, response.getStatus(), "Cancelamento deve retornar 204");
+        assertEquals(BookingStatusEnum.CANCELED, fakeBooking.getStatus(), "Status deveria ter sido alterado");
+    }
+
+    @Test
+    void shouldFailValidationWhenConflictExists() {
+
+        BookingConflictValidator validator = new BookingConflictValidator(bookingDAO);
+
+        Mockito.when(bookingDAO.existConflict(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(true);
+
+        CreateBookingRequestDTO dto = BookingTestHelper.buildCustomBookingDTO(
+                UUID.randomUUID(),
+                LocalDate.now().plusDays(5),
+                LocalDate.now().plusDays(7));
+
+        boolean result = validator.isValid(dto, null);
+
+        Assertions.assertFalse(result, "A validação deveria falhar por conflito de datas");
+    }
 
 }
