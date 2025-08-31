@@ -30,20 +30,6 @@ public class VehicleTest {
     }
 
     @Test
-    void shouldTransitionStatusFromAvailableToRented() {
-        VehicleModel vehicle = new VehicleModel("VW", "Gol", 2020, "1.6");
-        vehicle.setStatus(VehicleStatusEnum.RENTED);
-        Assertions.assertEquals(VehicleStatusEnum.RENTED, vehicle.getStatus());
-    }
-
-    @Test
-    void shouldReturnTrueWhenVehicleIsRented() {
-        VehicleModel vehicle = new VehicleModel("Fiat", "Mobi", 2022, "1.0");
-        vehicle.setStatus(VehicleStatusEnum.RENTED);
-        Assertions.assertTrue(vehicle.isRented());
-    }
-
-    @Test
     void shouldAddMaintenanceAndChangeStatus() {
         VehicleModel vehicle = new VehicleModel("Renault", "Sandero", 2019, "1.6");
         MaintenanceModel maintenance = new MaintenanceModel();

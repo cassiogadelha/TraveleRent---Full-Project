@@ -1,4 +1,4 @@
-package verso.caixa.dto;
+package verso.caixa.helpers;
 
 public record CreateVehicleDTOTest(
         String brand,

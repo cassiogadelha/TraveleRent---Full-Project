@@ -1,20 +1,18 @@
 package verso.caixa.service;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import verso.caixa.kafka.VehicleProducerDTO;
 import verso.caixa.model.VehicleStatus;
 import verso.caixa.repository.VehicleStatusDAO;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 
