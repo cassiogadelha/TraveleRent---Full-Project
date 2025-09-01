@@ -3,6 +3,7 @@ package verso.caixa.dto;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 public record CreateMaintenanceRequestDTO(
@@ -11,6 +12,6 @@ public record CreateMaintenanceRequestDTO(
         @NotBlank
         String problemDescription,
 
-        Instant createdAt
+        LocalDate createdAt
 ) {
 }

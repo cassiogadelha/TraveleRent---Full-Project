@@ -23,6 +23,7 @@ public class AccessoryService {
         VehicleModel vehicle = vehicleService.getVehicleEntityById(id);
 
         AccessoryModel accessory = new AccessoryModel(dto.name());
+
         accessory.persist();
 
         vehicle.addAccessory(accessory);

@@ -8,7 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.util.Map;
 
 @ApplicationScoped
-public class KeycloakAdminService {
+public class KeycloakAdminService {/*
 
     @Inject
     @RestClient
@@ -50,6 +50,6 @@ public class KeycloakAdminService {
                         "temporary", false
                 )
         );
-    }
+    }*/
 }
 

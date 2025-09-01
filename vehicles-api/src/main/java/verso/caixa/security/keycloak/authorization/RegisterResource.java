@@ -14,7 +14,7 @@ import java.util.Map;
 @Path("api/v1/register")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class RegisterResource {
+public class RegisterResource {/*
 
     @Inject
     KeycloakAdminService keycloakAdminService;
@@ -26,5 +26,5 @@ public class RegisterResource {
         keycloakAdminService.setPassword(token, userId, dto.password());
 
         return Response.status(Response.Status.CREATED).entity(Map.of("userId", userId)).build();
-    }
+    }*/
 }

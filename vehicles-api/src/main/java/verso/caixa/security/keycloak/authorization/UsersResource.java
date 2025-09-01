@@ -10,7 +10,7 @@ import org.jboss.resteasy.reactive.NoCache;
 import io.quarkus.security.identity.SecurityIdentity;
 
 @Path("api/v1/users")
-public class UsersResource {
+public class UsersResource {/*
 
     @Inject
     SecurityIdentity identity;
@@ -30,5 +30,5 @@ public class UsersResource {
         User(SecurityIdentity identity) {
             this.userName = identity.getPrincipal().getName();
         }
-    }
+    }*/
 }

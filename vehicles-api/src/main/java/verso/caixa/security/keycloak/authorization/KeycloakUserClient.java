@@ -8,7 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import java.util.Map;
 
 @RegisterRestClient(configKey = "keycloak-user-api")
-public interface KeycloakUserClient {
+public interface KeycloakUserClient {/*
 
     @POST
     @Path("/admin/realms/travelerent/users")
@@ -19,5 +19,5 @@ public interface KeycloakUserClient {
     @Path("/admin/realms/travelerent/users/{id}/reset-password")
     @Consumes(MediaType.APPLICATION_JSON)
     void setPassword(@HeaderParam("Authorization") String token, @PathParam("id") String userId, Map<String, Object> password);
-}
+*/}
 

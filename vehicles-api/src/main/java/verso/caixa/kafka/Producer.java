@@ -1,14 +1,12 @@
 package verso.caixa.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import verso.caixa.dto.CreateVehicleRequestDTO;
 
 import java.util.List;
-import java.util.UUID;
 
 public class Producer {
 

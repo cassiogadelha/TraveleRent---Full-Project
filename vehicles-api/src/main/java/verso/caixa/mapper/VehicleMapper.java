@@ -22,7 +22,7 @@
 
         AccessoryModel toEntity(AddAccessoryRequestDTO dto);
 
-        @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now().atZone(java.time.ZoneId.systemDefault()).toInstant())")
+        @Mapping(target = "createdAt", expression = "java(java.time.LocalDate.now())")
         MaintenanceModel toEntity(CreateMaintenanceRequestDTO dto);
 
         List<MaintenanceModel> toMaintenanceEntities(List<CreateMaintenanceRequestDTO> dtoList);

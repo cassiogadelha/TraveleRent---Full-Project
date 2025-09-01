@@ -6,7 +6,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.Map;
 
 @RegisterRestClient(configKey = "keycloak-token-client")
-public interface KeycloakTokenClient {
+public interface KeycloakTokenClient {/*
 
     @POST
     @Path("/realms/travelerent/protocol/openid-connect/token")
@@ -15,5 +15,5 @@ public interface KeycloakTokenClient {
             @FormParam("grant_type") String grantType,
             @FormParam("client_id") String clientId,
             @FormParam("client_secret") String clientSecret
-    );
+    );*/
 }

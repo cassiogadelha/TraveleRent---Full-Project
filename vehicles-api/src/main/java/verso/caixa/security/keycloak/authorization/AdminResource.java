@@ -12,10 +12,10 @@ import io.quarkus.security.Authenticated;
 @Authenticated
 public class AdminResource {
 
-    @GET
+    /*@GET
     @RolesAllowed("realm-admin")
     @Produces(MediaType.TEXT_PLAIN)
     public String admin() {
         return "granted";
-    }
+    }*/
 }

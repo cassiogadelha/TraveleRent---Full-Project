@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
@@ -21,7 +21,8 @@ public class MaintenanceModel extends PanacheEntityBase {
     public UUID maintenanceId;
 
     @Column(name = "created_at")
-    Instant createdAt;
+    LocalDate createdAt;
+
     @Column(name = "reason")
     String problemDescription;
 

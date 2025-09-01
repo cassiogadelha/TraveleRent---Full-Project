@@ -2,14 +2,17 @@ package verso.caixa.resource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.*;
 import verso.caixa.helpers.AdminToken;
 import verso.caixa.helpers.CreateMaintenanceDTOTest;
 import verso.caixa.helpers.CreateVehicleDTOTest;
+import verso.caixa.service.AccessoryService;
 
 import java.util.UUID;
 
@@ -142,6 +145,34 @@ public class IntegrationsTest {
         String vehicleId = locationHeader.substring(locationHeader.lastIndexOf("/") + 1);
 
         Assertions.assertNotNull(vehicleId);
+    }
+
+    @Test
+    void shouldDeleteVehicleWithValidID() throws JsonProcessingException {
+
+        CreateVehicleDTOTest dto = new CreateVehicleDTOTest("Fiat", "Uno", 2020, "1.0 Fire");
+        String vehicleJson = new ObjectMapper().writeValueAsString(dto);
+
+        Response createResponse = given()
+                .header("Authorization", "Bearer " + token)
+                .contentType("application/json")
+                .body(vehicleJson)
+                .post("/api/v1/vehicles");
+
+        createResponse.then().statusCode(201);
+
+        String locationHeader = createResponse.getHeader("Location");
+        String vehicleId = locationHeader.substring(locationHeader.lastIndexOf("/") + 1);
+
+        Assertions.assertNotNull(vehicleId);
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .contentType("application/json")
+                .body(vehicleJson)
+                .delete("/api/v1/vehicles/" + vehicleId)
+                .then()
+                .statusCode(204);
     }
 
     @Test
@@ -376,6 +407,105 @@ public class IntegrationsTest {
             .body("[0].brand", startsWith("Brand"))
             .body("[0].year", greaterThanOrEqualTo(2020))
             .body("[0].engine", equalTo("1.0"));
+    }
+
+    @Test
+    void shouldUpdateVehicleStatusSuccessfully() throws JsonProcessingException {
+        CreateVehicleDTOTest dto = new CreateVehicleDTOTest("Fiat", "Uno", 2020, "1.0 Fire");
+        String vehicleJson = new ObjectMapper().writeValueAsString(dto);
+
+        Response createResponse = given()
+            .header("Authorization", "Bearer " + token)
+            .contentType("application/json")
+            .body(vehicleJson)
+            .post("/api/v1/vehicles");
+
+        createResponse.then().statusCode(201);
+
+        String locationHeader = createResponse.getHeader("Location");
+        String vehicleId = locationHeader.substring(locationHeader.lastIndexOf("/") + 1);
+
+        Assertions.assertNotNull(vehicleId);
+
+        Log.info(vehicleId);
+
+        var json = """
+        {
+          "newStatus": "UNDER_MAINTENANCE"
+        }
+        """;
+
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType("application/json")
+            .body(json)
+            .patch("/api/v1/vehicles/" + vehicleId)
+            .then()
+            .statusCode(204);
+    }
+
+    @Test
+    void shouldAddAccessoryViaHttpAndReturnNoContent() throws JsonProcessingException {
+        CreateVehicleDTOTest dto = new CreateVehicleDTOTest("Fiat", "Uno", 2020, "1.0 Fire");
+        String vehicleJson = new ObjectMapper().writeValueAsString(dto);
+
+        Response createResponse = given()
+            .header("Authorization", "Bearer " + token)
+            .contentType("application/json")
+            .body(vehicleJson)
+            .post("/api/v1/vehicles");
+
+        createResponse.then().statusCode(201);
+
+        String locationHeader = createResponse.getHeader("Location");
+        String vehicleId = locationHeader.substring(locationHeader.lastIndexOf("/") + 1);
+
+        Assertions.assertNotNull(vehicleId);
+
+        String jsonBody = """
+            {
+                "name": "Airbag"
+            }
+        """;
+
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(jsonBody)
+            .when()
+            .put("/api/v1/vehicles/{id}/accessories", vehicleId)
+            .then()
+            .statusCode(204);
+    }
+
+    @Test
+    void shouldSendVehicleListToKafkaAndReturnAccepted() {
+        String jsonBody = """
+            [
+              {
+                "brand": "Fiat",
+                "model": "Uno",
+                "engine": "1.0",
+                "year": 2020
+              },
+              {
+                "brand": "Chevrolet",
+                "model": "Onix",
+                "engine": "1.4",
+                "year": 2022
+              }
+            ]
+        """;
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(jsonBody)
+                .auth().oauth2(token)
+                .when()
+                .post("/api/v1/vehicles/batch")
+                .then()
+                .statusCode(202)
+                .body(containsString("Veículos enviados para processamento"));
     }
 
 }

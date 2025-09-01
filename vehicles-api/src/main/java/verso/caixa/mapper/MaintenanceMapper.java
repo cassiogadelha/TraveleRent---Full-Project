@@ -14,7 +14,7 @@ public interface MaintenanceMapper {
     @Mapping(target = "vehicleInfo", expression = "java(toVehicleInfo(model.getVehicleModel()))")
     MaintenanceResponseDTO toResponse(MaintenanceModel model);
 
-    @Mapping(target = "createdAt", expression = "java(java.time.Instant.now())")
+    @Mapping(target = "createdAt", expression = "java(java.time.LocalDate.now())")
     MaintenanceModel toEntity(CreateMaintenanceRequestDTO dto);
 
     default VehicleInfoDTO toVehicleInfo(VehicleModel vehicle) {

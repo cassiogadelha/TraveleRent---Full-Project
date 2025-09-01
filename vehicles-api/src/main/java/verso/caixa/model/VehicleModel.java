@@ -59,7 +59,7 @@ public class VehicleModel extends PanacheEntityBase{
 
     private String model;
 
-    protected VehicleModel() {}
+    public VehicleModel() {}
 
     public VehicleModel(String brand, String model, int year, String engine) {
         this.brand = brand;
