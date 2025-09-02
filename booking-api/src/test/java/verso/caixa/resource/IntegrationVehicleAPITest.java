@@ -12,10 +12,10 @@ import static org.hamcrest.Matchers.is;
 
 @QuarkusTest
 public class IntegrationVehicleAPITest {
-    @RestClient
+   /* @RestClient
     @Inject
     @InjectMock
-    VehicleAPIClient vehicleAPIClient;
+    VehicleAPIClient vehicleAPIClient;*/
 
     /*
     @Test

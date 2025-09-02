@@ -9,12 +9,12 @@ import jakarta.ws.rs.client.ClientRequestFilter;
 @Priority(Interceptor.Priority.APPLICATION)
 public class AuthHeaderFilter implements ClientRequestFilter {
 
-    @Inject
-    KeycloakAdminService keycloakAdminService;
+    //@Inject
+    //KeycloakAdminService keycloakAdminService;
 
     @Override
     public void filter(ClientRequestContext requestContext) {
-        String token = keycloakAdminService.getAdminToken();
-        requestContext.getHeaders().add("Authorization", "Bearer " + token);
+        //String token = keycloakAdminService.getAdminToken();
+        //requestContext.getHeaders().add("Authorization", "Bearer " + token);
     }
 }

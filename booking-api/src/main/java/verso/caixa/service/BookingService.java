@@ -1,23 +1,16 @@
 package verso.caixa.service;
 
-import io.quarkus.cache.CacheInvalidate;
 import io.quarkus.cache.CacheInvalidateAll;
 import io.quarkus.cache.CacheKey;
 import io.quarkus.cache.CacheResult;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jetbrains.annotations.NotNull;
-import verso.caixa.client.VehicleAPIClient;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.dto.ResponseBookingDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
@@ -194,7 +187,6 @@ public class BookingService {
 
         possibleBooking.setStatus(BookingStatusEnum.CANCELED);
 
-        Log.info("RESERVA CANCELADA!!! VEÍCULO ENTROU EM MANUTENÇÃO");
         smsService.sendCancellationNotice("+5574999254283");
     }
 }

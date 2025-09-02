@@ -22,6 +22,15 @@ public class BookingTestHelper {
         );
     }
 
+    public static BookingModel buildValidBookingWithVehicleId(UUID vehicleId) {
+        return new BookingModel(
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(3),
+                UUID.randomUUID(),
+                vehicleId
+        );
+    }
+
     public static CreateBookingRequestDTO buildValidBookingDTO() {
         return new CreateBookingRequestDTO(
                 UUID.randomUUID(),

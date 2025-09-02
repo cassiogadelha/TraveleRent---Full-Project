@@ -9,12 +9,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import verso.caixa.client.VehicleAPIClient;
 import verso.caixa.dto.CreateBookingRequestDTO;
+import verso.caixa.dto.ErrorResponseDTO;
 import verso.caixa.dto.UpdateBookingStatusRequest;
 import verso.caixa.enums.BookingStatusEnum;
 import verso.caixa.enums.ErrorCode;
 import verso.caixa.exception.*;
 import verso.caixa.helpers.BookingTestHelper;
 import verso.caixa.kafka.BookingEmitterWrapper;
+import verso.caixa.kafka.VehicleProducerDTO;
 import verso.caixa.mapper.BookingMapper;
 import verso.caixa.model.BookingModel;
 import verso.caixa.model.VehicleStatus;
@@ -23,6 +25,7 @@ import verso.caixa.repository.VehicleStatusDAO;
 import verso.caixa.twilio.SmsService;
 import verso.caixa.validations.BookingConflictValidator;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -33,9 +36,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class ServiceUnityTests {
+
     BookingMapper bookingMapper;
     BookingDAO bookingDAO;
-    VehicleAPIClient vehicleAPIClient;
     SecurityIdentity securityIdentity;
     SmsService smsService;
     VehicleStatusDAO vehicleStatusDAO;
@@ -81,6 +84,22 @@ public class ServiceUnityTests {
             bookingService.createBooking(dto, UUID.randomUUID(), "Carlos Machado");
         });
     }
+
+    @Test
+    void shouldInstantiateErrorResponseDTO() {
+        ErrorResponseDTO dto = new ErrorResponseDTO(
+                "Erro Interno",
+                "Ocorreu uma falha inesperada",
+                500,
+                "/api/bookings",
+                Instant.now(),
+                "ERR500"
+        );
+
+        assertEquals("Erro Interno", dto.title());
+        assertEquals(500, dto.statusCode());
+    }
+
 
     @Test
     void shouldThrowVehicleExceptionWhenVehicleIsUnavailable() {
@@ -295,5 +314,4 @@ public class ServiceUnityTests {
 
         Assertions.assertFalse(result, "A validação deveria falhar por conflito de datas");
     }
-
 }

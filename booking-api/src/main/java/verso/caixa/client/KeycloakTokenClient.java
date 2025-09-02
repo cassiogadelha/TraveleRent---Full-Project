@@ -8,12 +8,12 @@ import java.util.Map;
 @RegisterRestClient(configKey = "keycloak-token-client")
 public interface KeycloakTokenClient {
 
-    @POST
+   /* @POST
     @Path("/realms/travelerent/protocol/openid-connect/token")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     Map<String, String> getToken(
             @FormParam("grant_type") String grantType,
             @FormParam("client_id") String clientId,
             @FormParam("client_secret") String clientSecret
-    );
+    );*/
 }

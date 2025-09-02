@@ -15,9 +15,9 @@ import java.util.UUID;
 @ApplicationScoped //para os testes
 public interface VehicleAPIClient {
 
-    @GET
+    /*@GET
     @Path("/vehicles/{vehicleId}")
     Vehicle findVehicleById(@PathParam("vehicleId") @NotNull UUID id);
 
-    record Vehicle(String status) {}
+    record Vehicle(String status) {}*/
 }

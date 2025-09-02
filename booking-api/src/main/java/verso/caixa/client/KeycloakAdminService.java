@@ -10,7 +10,7 @@ import java.util.Map;
 @ApplicationScoped
 public class KeycloakAdminService {
 
-    @Inject
+    /*@Inject
     @RestClient
     KeycloakTokenClient tokenClient;
 
@@ -21,7 +21,7 @@ public class KeycloakAdminService {
                 "cuv0nz1enzpp8aTLruUOLthU6NEyU0vs"
         );
         return tokenResponse.get("access_token");
-    }
+    }*/
 }
 
 

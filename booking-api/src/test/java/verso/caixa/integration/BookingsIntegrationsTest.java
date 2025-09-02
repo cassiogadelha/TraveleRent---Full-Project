@@ -2,15 +2,20 @@ package verso.caixa.integration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.quarkus.logging.Log;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.junit.jupiter.api.*;
 import verso.caixa.dto.CreateBookingRequestDTO;
 import verso.caixa.helpers.BookingTestHelper;
+import verso.caixa.kafka.VehicleProducerDTO;
 import verso.caixa.model.VehicleStatus;
+import verso.caixa.repository.BookingDAO;
 import verso.caixa.repository.VehicleStatusDAO;
 
 import java.time.LocalDate;
@@ -31,6 +36,14 @@ public class BookingsIntegrationsTest {
 
     @Inject
     VehicleStatusDAO vehicleStatusDAO;
+
+    @Inject
+    @Channel("vehicle-status-changed-out")
+    Emitter<VehicleProducerDTO> emitter;
+
+    @Inject
+    BookingDAO bookingDAO;
+
 
     @BeforeEach
     @Transactional
@@ -278,6 +291,53 @@ public class BookingsIntegrationsTest {
             .body("entity.status", equalTo("CANCELED"));
 
     }
+
+    @Test
+    @Order(12)
+    void testGetVehicleStatusReturnsList() {
+        String token = BookingTestHelper.getAdminAccessToken();
+
+        QuarkusTransaction.begin();
+        vehicleStatusDAO.persist(new VehicleStatus(UUID.randomUUID(), "AVAILABLE"));
+        vehicleStatusDAO.persist(new VehicleStatus(UUID.randomUUID(), "UNDER_MAINTENANCE"));
+        vehicleStatusDAO.persist(new VehicleStatus(UUID.randomUUID(), "AVAILABLE"));
+        QuarkusTransaction.commit();
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .queryParam("page", 0)
+                .queryParam("size", 10)
+                .when()
+                .get("/api/v1/bookings/vehicles-status")
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("$", hasSize(greaterThanOrEqualTo(3)))
+                .body("[0].status", notNullValue())
+                .body("[1].status", notNullValue())
+                .body("[1].status", notNullValue());
+    }
+
+    @Test
+    @Order(13)
+    void testGetVehicleStatusReturnsEmptyMessageWhenNoData() {
+        String token = BookingTestHelper.getAdminAccessToken();
+
+        QuarkusTransaction.begin();
+        vehicleStatusDAO.deleteAll();
+        QuarkusTransaction.commit();
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .queryParam("page", 0)
+                .queryParam("size", 10)
+                .when()
+                .get("/api/v1/bookings/vehicles-status")
+                .then()
+                .statusCode(200)
+                .body("mensagem", equalTo("A lista de VehiclesStatus está vazia."));
+    }
+
 
     /*
     @Test

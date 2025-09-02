@@ -55,6 +55,11 @@
 
         <dependency>
             <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jacoco</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5-mockito</artifactId>
             <scope>test</scope>
         </dependency>
@@ -62,14 +67,14 @@
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock</artifactId>
-            <version>3.3.1</version>
+            <version>3.3.1</version> <!-- ou a versão mais recente -->
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.18.0</version> <!-- ou a versão mais recente -->
+            <version>5.18.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -85,20 +90,19 @@
             <artifactId>quarkus-junit5</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <!-- Biblioteca principal do MapStruct -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Biblioteca principal do MapStruct -->
+
+        <!-- Processador de anotações usado na geração dos mappers -->
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>1.5.5.Final</version>
         </dependency>
-
-        <!-- Processador de anotações usado na geração dos mappers -->
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-processor</artifactId>
@@ -117,6 +121,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
@@ -147,11 +152,17 @@
             <artifactId>twilio</artifactId>
             <version>9.0.0</version>
         </dependency>
-
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
             <version>3.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.3.0</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
@@ -230,35 +241,12 @@
             </plugin>
 
             <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.13</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M9</version>
-                <configuration>
-                    <argLine>"-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/0.8.10/org.jacoco.agent-0.8.10-runtime.jar=destfile=target/jacoco.exec"</argLine>
-                    <reuseForks>false</reuseForks>
-                    <release>21</release>
-                </configuration>
             </plugin>
+
+
 
         </plugins>
     </build>
